@@ -1,38 +1,56 @@
-// =========================================================
-// Owncast custom front tweaks
-// - Custom emote picker from /api/emoji (no search)
-// - Custom button overlays native emoji button (same parent, absolute) => click ALWAYS works
-// - Mentions inside chat messages get SAME color as mentioned username
-// =========================================================
+/*
+Owncast Custom JS - V1.1
+Copyright 2026
+Cobravideoclub
+
+V1.1:
+- Reduce full-page DOM scans
+- Safer responsive picker positioning
+- Cache emoji API after first successful load
+- More robust mention recoloring
+- Better contenteditable insertion fallback
+- Avoid duplicate field observers
+*/
 
 window.addEventListener("load", () => {
-  const CHAT_INPUT_SELECTOR = "#chat-input-content-editable";
+  "use strict";
 
+  const CHAT_INPUT_SELECTOR = "#chat-input-content-editable";
   const ADMIN_DISPLAY_NAME = "Cobra Videoclub 🐍";
 
-  const SELECTOR_MESSAGE =
-    "[class^='ChatUserMessage_message'], [class*=' ChatUserMessage_message']";
-  const SELECTOR_USERNAME =
-    "[class^='ChatUserMessage_userName'], [class*=' ChatUserMessage_userName']";
+  const SELECTOR_MESSAGE = '[class*="ChatUserMessage_message"]';
+  const SELECTOR_USERNAME = '[class*="ChatUserMessage_userName"]';
+  const SELECTOR_CHAT_ROOT =
+    '[class*="ChatContainer_virtuoso"], #chat-container';
+  const SELECTOR_CHAT_FIELD =
+    '[class*="ChatTextField_root"], [class*="ChatContainer_chatTextField"]';
+
+  const FALLBACK_BUTTON_SIZE = 34;
+  const PANEL_MARGIN = 8;
+  const PANEL_GAP = 12;
 
   let emojiList = [];
+  let emojiLoaded = false;
   let isOpen = false;
+  let observedField = null;
 
-  // =========================================================
-  // Utils
-  // =========================================================
   const nameToColor = new Map();
 
-  function normalizeSpaces(s) {
-    return (s || "").trim().replace(/\s+/g, " ");
+  function normalizeSpaces(value) {
+    return String(value || "").trim().replace(/\s+/g, " ");
   }
 
   function normalizeForCompare(name) {
     const clean = normalizeSpaces(name).toLowerCase();
-    return clean.replace(/\s*[\p{Extended_Pictographic}\p{So}]+$/u, "");
+    try {
+      return clean.replace(/\s*[\p{Extended_Pictographic}\p{So}]+$/u, "");
+    } catch {
+      return clean;
+    }
   }
 
   const ADMIN_KEY = normalizeForCompare(ADMIN_DISPLAY_NAME);
+
   function isAdminName(name) {
     return normalizeForCompare(name) === ADMIN_KEY;
   }
@@ -41,51 +59,72 @@ window.addEventListener("load", () => {
     return document.querySelector(CHAT_INPUT_SELECTOR);
   }
 
-  function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
+  function getChatFieldRoot() {
+    return document.querySelector(SELECTOR_CHAT_FIELD);
+  }
+
+  function getChatRoot() {
+    return document.querySelector(SELECTOR_CHAT_ROOT) || document.body;
+  }
+
+  function clamp(value, min, max) {
+    if (max < min) return min;
+    return Math.max(min, Math.min(max, value));
   }
 
   function throttleRaf(fn) {
     let scheduled = false;
+    let latestArgs = null;
+
     return (...args) => {
+      latestArgs = args;
       if (scheduled) return;
+
       scheduled = true;
       requestAnimationFrame(() => {
         scheduled = false;
-        fn(...args);
+        fn(...latestArgs);
       });
     };
   }
 
-  // =========================================================
-  // Insert into contenteditable (best-effort)
-  // =========================================================
   function ensureCaretInside(el) {
     if (!el) return null;
+
     const doc = el.ownerDocument || document;
     const win = doc.defaultView || window;
-    const sel = win.getSelection ? win.getSelection() : null;
-    if (!sel) return null;
+    const selection = win.getSelection?.();
+
+    if (!selection) return null;
 
     try {
-      if (sel.rangeCount > 0) {
-        const range = sel.getRangeAt(0);
-        if (el.contains(range.commonAncestorContainer)) return sel;
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (el.contains(range.commonAncestorContainer)) return selection;
       }
-      const endRange = doc.createRange();
-      endRange.selectNodeContents(el);
-      endRange.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(endRange);
-      return sel;
+
+      const range = doc.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      return selection;
     } catch {
-      return sel;
+      return selection;
     }
   }
 
-  function fireInput(el) {
+  function fireInput(el, text = "") {
     try {
-      el.dispatchEvent(new InputEvent("input", { bubbles: true }));
+      el.dispatchEvent(
+        new InputEvent("input", {
+          bubbles: true,
+          inputType: "insertText",
+          data: text,
+        })
+      );
     } catch {
       el.dispatchEvent(new Event("input", { bubbles: true }));
     }
@@ -93,51 +132,83 @@ window.addEventListener("load", () => {
 
   function insertTextAtCaret(el, text) {
     if (!el) return;
+
     el.focus();
 
     const doc = el.ownerDocument || document;
-    ensureCaretInside(el);
+    const selection = ensureCaretInside(el);
 
+    const currentText = el.textContent || "";
     const addSpaceBefore =
-      el.textContent && !el.textContent.endsWith(" ") && text && !text.startsWith(" ");
-    const insertText = (addSpaceBefore ? " " : "") + text + " ";
+      currentText &&
+      !currentText.endsWith(" ") &&
+      text &&
+      !text.startsWith(" ");
 
-    // execCommand often works best for contenteditable
+    const insertText = `${addSpaceBefore ? " " : ""}${text} `;
+
     try {
-      if (doc.queryCommandSupported && doc.queryCommandSupported("insertText")) {
-        doc.execCommand("insertText", false, insertText);
-        fireInput(el);
+      if (
+        typeof doc.execCommand === "function" &&
+        (!doc.queryCommandSupported ||
+          doc.queryCommandSupported("insertText"))
+      ) {
+        const inserted = doc.execCommand(
+          "insertText",
+          false,
+          insertText
+        );
+
+        if (inserted) {
+          fireInput(el, insertText);
+          return;
+        }
+      }
+    } catch {
+      // Use Range fallback below.
+    }
+
+    try {
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+
+        const node = doc.createTextNode(insertText);
+        range.insertNode(node);
+        range.setStartAfter(node);
+        range.collapse(true);
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        fireInput(el, insertText);
         return;
       }
-    } catch {}
+    } catch {
+      // Last-resort fallback below.
+    }
 
-    // fallback
-    el.textContent = (el.textContent || "") + insertText;
-    fireInput(el);
+    el.textContent = currentText + insertText;
+    fireInput(el, insertText);
   }
 
-  // =========================================================
-  // Collect colors + mark admin
-  // =========================================================
   function collectUserColorsAndMarkAdmin(root = document) {
-    const nameEls = root.querySelectorAll(SELECTOR_USERNAME);
+    const nameEls = root.querySelectorAll?.(SELECTOR_USERNAME) || [];
+
     nameEls.forEach((el) => {
-      const name = normalizeSpaces(el.textContent || "");
+      const name = normalizeSpaces(el.textContent);
       if (!name) return;
 
       const color = getComputedStyle(el).color;
       if (color) nameToColor.set(name, color);
 
-      if (isAdminName(name)) el.classList.add("oc-admin-name");
-      else el.classList.remove("oc-admin-name");
+      el.classList.toggle("oc-admin-name", isAdminName(name));
     });
   }
 
-  // =========================================================
-  // Emote-only messages
-  // =========================================================
   function markEmoteOnlyMessages(root = document) {
-    const messages = root.querySelectorAll(SELECTOR_MESSAGE);
+    const messages = root.querySelectorAll?.(SELECTOR_MESSAGE) || [];
+
     messages.forEach((msgEl) => {
       msgEl.classList.remove("oc-emote-single");
 
@@ -145,30 +216,34 @@ window.addEventListener("load", () => {
       if (emojis.length !== 1) return;
 
       const clone = msgEl.cloneNode(true);
-      clone.querySelectorAll("img.emoji").forEach((e) => e.remove());
+      clone.querySelectorAll("img.emoji").forEach((emoji) => emoji.remove());
 
-      const text = (clone.textContent || "").replace(/\s+/g, "").trim();
+      const text = normalizeSpaces(clone.textContent).replace(/\s+/g, "");
       if (!text) msgEl.classList.add("oc-emote-single");
     });
   }
 
-  // =========================================================
-  // Mention coloring inside chat messages
-  // =========================================================
   function buildMentionRegex(names) {
-    const sorted = [...names].sort((a, b) => b.length - a.length);
-    const escaped = sorted.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    if (!escaped.length) return null;
+    const sorted = [...names]
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length);
 
-    // match " @Name" or start-of-text "@Name"
-    return new RegExp(`(^|\\s)@(${escaped.join("|")})(?!\\S)`, "g");
+    if (!sorted.length) return null;
+
+    const escaped = sorted.map((name) =>
+      name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    );
+
+    return new RegExp(
+      `(^|\\s)@(${escaped.join("|")})(?=$|\\s|[.,!?;:])`,
+      "g"
+    );
   }
 
   function colorizeMentionsInNode(msgEl) {
     if (!msgEl) return;
-    if (msgEl.dataset && msgEl.dataset.ocMentionsDone === "1") return;
 
-    const names = Array.from(nameToColor.keys()).filter(Boolean);
+    const names = Array.from(nameToColor.keys());
     const rx = buildMentionRegex(names);
     if (!rx) return;
 
@@ -177,13 +252,23 @@ window.addEventListener("load", () => {
       NodeFilter.SHOW_TEXT,
       {
         acceptNode(node) {
-          if (!node.nodeValue || node.nodeValue.indexOf("@") === -1) return NodeFilter.FILTER_REJECT;
-          const p = node.parentElement;
-          if (!p) return NodeFilter.FILTER_REJECT;
-          if (p.closest(".oc-mention")) return NodeFilter.FILTER_REJECT;
-          if (p.closest("a, button, input, textarea")) return NodeFilter.FILTER_REJECT;
+          if (!node.nodeValue?.includes("@")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          const parent = node.parentElement;
+          if (!parent) return NodeFilter.FILTER_REJECT;
+
+          if (parent.closest(".oc-mention")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          if (parent.closest("a, button, input, textarea")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
           return NodeFilter.FILTER_ACCEPT;
-        }
+        },
       }
     );
 
@@ -191,88 +276,111 @@ window.addEventListener("load", () => {
     while (walker.nextNode()) nodes.push(walker.currentNode);
 
     nodes.forEach((textNode) => {
-      const text = textNode.nodeValue;
+      const text = textNode.nodeValue || "";
       rx.lastIndex = 0;
 
-      let m;
+      let match;
       let last = 0;
       let changed = false;
-      const frag = document.createDocumentFragment();
 
-      while ((m = rx.exec(text)) !== null) {
-        const full = m[0];
-        const leading = m[1] || "";
-        const name = m[2] || "";
-        const start = m.index;
+      const fragment = document.createDocumentFragment();
 
-        frag.appendChild(document.createTextNode(text.slice(last, start)));
-        if (leading) frag.appendChild(document.createTextNode(leading));
+      while ((match = rx.exec(text)) !== null) {
+        const full = match[0];
+        const leading = match[1] || "";
+        const name = match[2] || "";
+        const start = match.index;
+
+        fragment.appendChild(
+          document.createTextNode(text.slice(last, start))
+        );
+
+        if (leading) {
+          fragment.appendChild(
+            document.createTextNode(leading)
+          );
+        }
 
         const span = document.createElement("span");
         span.className = "oc-mention";
-        span.style.color = nameToColor.get(name) || "var(--mention-fallback)";
-        span.textContent = "@" + name;
+        span.style.color =
+          nameToColor.get(name) || "var(--mention-fallback)";
+        span.textContent = `@${name}`;
 
-        frag.appendChild(span);
+        fragment.appendChild(span);
 
         last = start + full.length;
         changed = true;
       }
 
       if (!changed) return;
-      frag.appendChild(document.createTextNode(text.slice(last)));
-      textNode.parentNode.replaceChild(frag, textNode);
-    });
 
-    msgEl.dataset.ocMentionsDone = "1";
+      fragment.appendChild(
+        document.createTextNode(text.slice(last))
+      );
+
+      textNode.parentNode?.replaceChild(fragment, textNode);
+    });
   }
 
   function colorizeMentionsInAllMessages(root = document) {
-    const messages = root.querySelectorAll(SELECTOR_MESSAGE);
-    messages.forEach((msgEl) => colorizeMentionsInNode(msgEl));
+    const messages = root.querySelectorAll?.(SELECTOR_MESSAGE) || [];
+    messages.forEach(colorizeMentionsInNode);
   }
 
-  // =========================================================
-  // Click username => insert @name into input
-  // =========================================================
-  document.body.addEventListener("click", (event) => {
-    const el = event.target.closest(SELECTOR_USERNAME);
-    if (!el) return;
+  function processChat(root = getChatRoot()) {
+    collectUserColorsAndMarkAdmin(root);
+    markEmoteOnlyMessages(root);
+    colorizeMentionsInAllMessages(root);
+  }
 
-    const name = normalizeSpaces(el.textContent || "");
+  document.body.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const username = target.closest(SELECTOR_USERNAME);
+    if (!username) return;
+
+    const name = normalizeSpaces(username.textContent);
     if (!name) return;
 
-    const color = getComputedStyle(el).color;
+    const color = getComputedStyle(username).color;
     if (color) nameToColor.set(name, color);
 
-    insertTextAtCaret(getChatBox(), "@" + name);
+    insertTextAtCaret(getChatBox(), `@${name}`);
   });
 
-  // =========================================================
-  // Custom Emoji Picker UI (no search)
-  // =========================================================
   const btn = document.createElement("button");
   btn.className = "oc-emoji-btn oc-emoji-btn--fixed";
   btn.type = "button";
   btn.title = "Emotes";
-  btn.setAttribute("aria-label", "Open emotes");
+  btn.setAttribute("aria-label", "Ouvrir les emotes");
+  btn.setAttribute("aria-expanded", "false");
   btn.textContent = "🙂";
 
   const panel = document.createElement("div");
   panel.className = "oc-emoji-panel";
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-label", "Emotes");
+
   panel.innerHTML = `
     <div class="oc-emoji-panel-header">
       <div class="oc-emoji-title">Emotes</div>
-      <button class="oc-emoji-close" type="button" aria-label="Close">✕</button>
+      <button
+        class="oc-emoji-close"
+        type="button"
+        aria-label="Fermer"
+      >✕</button>
     </div>
     <div class="oc-emoji-panel-body">
       <div class="oc-emoji-grid"></div>
-      <div class="oc-emoji-empty" style="display:none;">Aucune emote trouvée.</div>
+      <div class="oc-emoji-empty" hidden>
+        Aucune emote trouvée.
+      </div>
     </div>
   `;
 
-  document.body.appendChild(btn);
-  document.body.appendChild(panel);
+  document.body.append(btn, panel);
 
   const grid = panel.querySelector(".oc-emoji-grid");
   const empty = panel.querySelector(".oc-emoji-empty");
@@ -281,67 +389,120 @@ window.addEventListener("load", () => {
   function normalizeEmojiApi(data) {
     if (Array.isArray(data)) {
       return data
-        .map((x) => ({ name: String(x.name || ""), url: String(x.url || "") }))
-        .filter((x) => x.name && x.url);
+        .map((item) => ({
+          name: String(item?.name || ""),
+          url: String(item?.url || ""),
+        }))
+        .filter((item) => item.name && item.url);
     }
+
     if (data && typeof data === "object") {
       return Object.entries(data)
-        .map(([name, url]) => ({ name: String(name), url: String(url) }))
-        .filter((x) => x.name && x.url);
+        .map(([name, url]) => ({
+          name: String(name),
+          url: String(url),
+        }))
+        .filter((item) => item.name && item.url);
     }
+
     return [];
   }
 
-  async function loadEmojis() {
+  async function loadEmojis(force = false) {
+    if (emojiLoaded && !force) return emojiList;
+
     try {
-      const res = await fetch("/api/emoji", { cache: "no-store" });
-      const data = await res.json();
+      const response = await fetch("/api/emoji", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `/api/emoji returned ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
       emojiList = normalizeEmojiApi(data)
-        .filter((e) => (e.url || "").includes("/img/emoji/"))
-        .sort((a, b) => a.name.localeCompare(b.name));
-    } catch (err) {
-      console.error("[oc-emotes] failed to load /api/emoji", err);
+        .filter((emoji) => emoji.url.includes("/img/emoji/"))
+        .sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, {
+            sensitivity: "base",
+          })
+        );
+
+      emojiLoaded = true;
+    } catch (error) {
+      console.error(
+        "[oc-emotes] failed to load /api/emoji",
+        error
+      );
+
       emojiList = [];
+      emojiLoaded = false;
     }
+
+    return emojiList;
   }
 
   function renderGrid() {
-    grid.innerHTML = "";
+    if (!grid || !empty) return;
+
+    grid.replaceChildren();
 
     if (!emojiList.length) {
-      empty.style.display = "";
+      empty.hidden = false;
       return;
     }
-    empty.style.display = "none";
 
-    for (const e of emojiList) {
+    empty.hidden = true;
+
+    const fragment = document.createDocumentFragment();
+
+    for (const emoji of emojiList) {
       const tile = document.createElement("button");
       tile.type = "button";
       tile.className = "oc-emoji-tile";
-      tile.title = `:${e.name}:`;
+      tile.title = `:${emoji.name}:`;
+      tile.setAttribute(
+        "aria-label",
+        `Insérer :${emoji.name}:`
+      );
 
       const img = document.createElement("img");
       img.loading = "lazy";
-      img.alt = e.name;
-      img.src = e.url;
+      img.decoding = "async";
+      img.alt = "";
+      img.src = emoji.url;
 
       tile.appendChild(img);
 
-      tile.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        insertTextAtCaret(getChatBox(), `:${e.name}:`);
+      tile.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        insertTextAtCaret(
+          getChatBox(),
+          `:${emoji.name}:`
+        );
+
         closePanel();
       });
 
-      grid.appendChild(tile);
+      fragment.appendChild(tile);
     }
+
+    grid.appendChild(fragment);
   }
 
   function openPanel() {
     isOpen = true;
     panel.classList.add("is-open");
-    positionOverlay(); // ensures right placement
+    btn.setAttribute("aria-expanded", "true");
+
+    positionOverlay();
     positionPanel();
     renderGrid();
   }
@@ -349,66 +510,84 @@ window.addEventListener("load", () => {
   function closePanel() {
     isOpen = false;
     panel.classList.remove("is-open");
+    btn.setAttribute("aria-expanded", "false");
   }
 
-  closeBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  closeBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     closePanel();
   });
 
-  // IMPORTANT: capture click early so nothing steals it
   btn.addEventListener(
     "click",
-    async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+    async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
       if (isOpen) {
         closePanel();
         return;
       }
+
       await loadEmojis();
       openPanel();
     },
     true
   );
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && isOpen) closePanel();
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isOpen) {
+      closePanel();
+      btn.focus();
+    }
   });
 
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", (event) => {
     if (!isOpen) return;
-    const t = e.target;
-    if (panel.contains(t) || btn.contains(t)) return;
+
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+
+    if (panel.contains(target) || btn.contains(target)) {
+      return;
+    }
+
     closePanel();
   });
-
-  // =========================================================
-  // Overlay positioning: SAME PARENT as native emoji button
-  // =========================================================
-  function getChatFieldRoot() {
-    return (
-      document.querySelector("[class^='ChatTextField_root'], [class*=' ChatTextField_root']") ||
-      document.querySelector("[class^='ChatContainer_chatTextField'], [class*=' ChatContainer_chatTextField']") ||
-      null
-    );
-  }
 
   function findNativeEmojiButton() {
     const chatField = getChatFieldRoot();
     const scope = chatField || document;
 
-    const btns = Array.from(scope.querySelectorAll("button"));
+    const buttons = Array.from(
+      scope.querySelectorAll("button")
+    );
 
-    const labeled = btns.find((b) => {
-      const t = ((b.getAttribute("aria-label") || b.title || "") + "").toLowerCase();
-      return t.includes("emoji") || t.includes("emote");
+    const labeled = buttons.find((button) => {
+      const label = String(
+        button.getAttribute("aria-label") ||
+          button.title ||
+          ""
+      ).toLowerCase();
+
+      return (
+        label.includes("emoji") ||
+        label.includes("emote")
+      );
     });
+
     if (labeled) return labeled;
 
-    const near = chatField ? Array.from(chatField.querySelectorAll("button")) : [];
-    if (near.length) return near[near.length - 1];
+    if (chatField) {
+      const nearbyButtons = Array.from(
+        chatField.querySelectorAll("button")
+      );
+
+      if (nearbyButtons.length) {
+        return nearbyButtons[nearbyButtons.length - 1];
+      }
+    }
 
     return null;
   }
@@ -416,52 +595,131 @@ window.addEventListener("load", () => {
   const positionOverlay = throttleRaf(() => {
     const nativeBtn = findNativeEmojiButton();
 
-    if (!nativeBtn || !nativeBtn.parentElement) {
-      // fallback fixed
-      if (!btn.classList.contains("oc-emoji-btn--fixed")) btn.classList.add("oc-emoji-btn--fixed");
+    if (!nativeBtn?.parentElement) {
+      if (btn.parentElement !== document.body) {
+        document.body.appendChild(btn);
+      }
+
+      btn.classList.add("oc-emoji-btn--fixed");
+
+      btn.style.position = "";
       btn.style.left = "";
       btn.style.top = "";
-      btn.style.right = "16px";
-      btn.style.bottom = "72px";
+      btn.style.right = "";
+      btn.style.bottom = "";
+      btn.style.width = "";
+      btn.style.height = "";
+
       return;
     }
 
     const parent = nativeBtn.parentElement;
+    const parentStyle = getComputedStyle(parent);
 
-    // ensure parent is a positioning context
-    const ps = getComputedStyle(parent);
-    if (ps.position === "static") parent.style.position = "relative";
+    if (parentStyle.position === "static") {
+      parent.style.position = "relative";
+    }
 
-    // move our button into same parent
-    if (btn.parentElement !== parent) parent.appendChild(btn);
+    if (btn.parentElement !== parent) {
+      parent.appendChild(btn);
+    }
 
     btn.classList.remove("oc-emoji-btn--fixed");
     btn.style.position = "absolute";
 
-    // overlay exactly on native button position inside parent
-    // (offsetLeft/Top are relative to offsetParent; in practice here it's ok once in same parent)
-    const left = nativeBtn.offsetLeft;
-    const top = nativeBtn.offsetTop;
-    const w = nativeBtn.offsetWidth || 34;
-    const h = nativeBtn.offsetHeight || 34;
+    const nativeRect = nativeBtn.getBoundingClientRect();
+    const parentRect = parent.getBoundingClientRect();
+
+    const left =
+      nativeRect.left -
+      parentRect.left +
+      parent.scrollLeft;
+
+    const top =
+      nativeRect.top -
+      parentRect.top +
+      parent.scrollTop;
 
     btn.style.left = `${left}px`;
     btn.style.top = `${top}px`;
-    btn.style.width = `${w}px`;
-    btn.style.height = `${h}px`;
+    btn.style.right = "";
+    btn.style.bottom = "";
 
-    // make native effectively "hidden" but still present
-    nativeBtn.style.setProperty("opacity", "0", "important");
-    nativeBtn.style.setProperty("pointer-events", "none", "important");
+    btn.style.width =
+      `${nativeRect.width || FALLBACK_BUTTON_SIZE}px`;
+
+    btn.style.height =
+      `${nativeRect.height || FALLBACK_BUTTON_SIZE}px`;
+
+    nativeBtn.style.setProperty(
+      "opacity",
+      "0",
+      "important"
+    );
+
+    nativeBtn.style.setProperty(
+      "pointer-events",
+      "none",
+      "important"
+    );
   });
 
   function positionPanel() {
-    const r = btn.getBoundingClientRect();
-    const panelW = 360;
-    const panelH = 420;
+    if (!isOpen) return;
 
-    const left = clamp(r.right - panelW, 8, window.innerWidth - panelW - 8);
-    const top = clamp(r.top - panelH - 12, 8, window.innerHeight - panelH - 8);
+    const buttonRect = btn.getBoundingClientRect();
+
+    const viewportWidth =
+      document.documentElement.clientWidth ||
+      window.innerWidth;
+
+    const viewportHeight =
+      window.visualViewport?.height ||
+      document.documentElement.clientHeight ||
+      window.innerHeight;
+
+    const panelRect = panel.getBoundingClientRect();
+
+    const panelWidth =
+      panelRect.width ||
+      Math.min(360, viewportWidth - PANEL_MARGIN * 2);
+
+    const panelHeight =
+      panelRect.height ||
+      Math.min(420, viewportHeight - PANEL_MARGIN * 2);
+
+    let left = buttonRect.right - panelWidth;
+    left = clamp(
+      left,
+      PANEL_MARGIN,
+      viewportWidth - panelWidth - PANEL_MARGIN
+    );
+
+    const roomAbove =
+      buttonRect.top - PANEL_GAP - PANEL_MARGIN;
+
+    const roomBelow =
+      viewportHeight -
+      buttonRect.bottom -
+      PANEL_GAP -
+      PANEL_MARGIN;
+
+    let top;
+
+    if (
+      roomAbove >= panelHeight ||
+      roomAbove >= roomBelow
+    ) {
+      top = buttonRect.top - panelHeight - PANEL_GAP;
+    } else {
+      top = buttonRect.bottom + PANEL_GAP;
+    }
+
+    top = clamp(
+      top,
+      PANEL_MARGIN,
+      viewportHeight - panelHeight - PANEL_MARGIN
+    );
 
     panel.style.left = `${left}px`;
     panel.style.top = `${top}px`;
@@ -469,51 +727,103 @@ window.addEventListener("load", () => {
     panel.style.bottom = "";
   }
 
-  window.addEventListener("resize", () => {
+  const reposition = throttleRaf(() => {
     positionOverlay();
-    if (isOpen) positionPanel();
+
+    if (isOpen) {
+      positionPanel();
+    }
   });
 
-  // Observe only the chat field for re-renders
-  const fieldObserver = new MutationObserver(() => {
-    positionOverlay();
-    if (isOpen) positionPanel();
+  window.addEventListener("resize", reposition, {
+    passive: true,
   });
+
+  window.addEventListener("orientationchange", reposition);
+
+  window.visualViewport?.addEventListener(
+    "resize",
+    reposition,
+    { passive: true }
+  );
+
+  window.visualViewport?.addEventListener(
+    "scroll",
+    reposition,
+    { passive: true }
+  );
+
+  const fieldObserver = new MutationObserver(reposition);
 
   function attachFieldObserver() {
     const root = getChatFieldRoot();
-    if (!root) return false;
-    fieldObserver.observe(root, { childList: true, subtree: true });
+    if (!root || root === observedField) return Boolean(root);
+
+    fieldObserver.disconnect();
+    observedField = root;
+
+    fieldObserver.observe(root, {
+      childList: true,
+      subtree: true,
+    });
+
     return true;
   }
 
-  // =========================================================
-  // Chat observer (throttled)
-  // =========================================================
   const chatObserver = new MutationObserver(
-    throttleRaf(() => {
-      collectUserColorsAndMarkAdmin(document);
-      markEmoteOnlyMessages(document);
-      colorizeMentionsInAllMessages(document);
-      positionOverlay();
-      if (isOpen) positionPanel();
+    throttleRaf((mutations) => {
+      const roots = new Set();
+
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node instanceof Element) {
+            roots.add(node);
+          }
+        }
+      }
+
+      if (!roots.size) {
+        processChat(getChatRoot());
+      } else {
+        roots.forEach((root) => {
+          collectUserColorsAndMarkAdmin(root);
+        });
+
+        roots.forEach((root) => {
+          markEmoteOnlyMessages(root);
+          colorizeMentionsInAllMessages(root);
+        });
+      }
+
+      attachFieldObserver();
+      reposition();
     })
   );
-  chatObserver.observe(document.body, { childList: true, subtree: true });
 
-  // Bootstrap (Owncast mounts async)
-  function bootstrapOnce() {
-    collectUserColorsAndMarkAdmin(document);
-    markEmoteOnlyMessages(document);
-    colorizeMentionsInAllMessages(document);
-    positionOverlay();
-    attachFieldObserver();
+  function attachChatObserver() {
+    const root = getChatRoot();
+
+    chatObserver.disconnect();
+
+    chatObserver.observe(root, {
+      childList: true,
+      subtree: true,
+    });
   }
 
-  loadEmojis().then(() => renderGrid());
+  function bootstrap() {
+    processChat(getChatRoot());
+    positionOverlay();
+    attachFieldObserver();
+    attachChatObserver();
+  }
 
-  bootstrapOnce();
-  setTimeout(bootstrapOnce, 300);
-  setTimeout(bootstrapOnce, 900);
-  setTimeout(bootstrapOnce, 1600);
+  loadEmojis().then(renderGrid);
+
+  bootstrap();
+
+  // Owncast mounts/replaces parts of the UI asynchronously.
+  setTimeout(bootstrap, 300);
+  setTimeout(bootstrap, 900);
+  setTimeout(bootstrap, 1600);
 });
