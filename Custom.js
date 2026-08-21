@@ -1,7 +1,6 @@
 /*
 Owncast Custom JS - V1.1
-Copyright 2026
-Cobravideoclub
+Copyright 2023 Le fractal + Cobravideoclub
 
 V1.1:
 - Reduce full-page DOM scans
