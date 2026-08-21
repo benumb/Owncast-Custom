@@ -1,6 +1,6 @@
 /*
 Copyright 2026 Cobra Videoclub
-Owncast Custom CSS - V2.2
+Owncast Custom CSS - V2.3
 */
 
 /* =========================================================
@@ -468,7 +468,6 @@ img.emoji.oc-emote-single-img {
   position: fixed;
 }
 
-#chat-container::after,
 .oc-emoji-panel::after {
   content: "";
   position: absolute;
@@ -486,7 +485,6 @@ img.emoji.oc-emote-single-img {
     );
 }
 
-#chat-container > *,
 .oc-emoji-panel > * {
   position: relative;
   z-index: 1;
@@ -583,7 +581,6 @@ img.emoji.oc-emote-single-img {
     border-radius: 8px !important;
   }
 
-  #chat-container::after,
   .oc-emoji-panel::after {
     opacity: 0.035;
   }
@@ -786,8 +783,51 @@ img.emoji.oc-emote-single-img {
       );
   }
 
-  /* The scanline should remain almost invisible on desktop text. */
-  #chat-container::after {
-    opacity: 0.025;
+}
+
+
+/* =========================================================
+   V2.3 — Desktop scroll / Virtuoso stability fix
+   ========================================================= */
+
+@media (min-width: 721px) {
+  /* Leave Virtuoso positioning untouched. */
+  #chat-container {
+    overflow: hidden;
+  }
+
+  #chat-container [class*="ChatContainer_virtuoso"],
+  #chat-container [data-virtuoso-scroller="true"] {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior-y: contain;
+
+    scrollbar-width: thin;
+    scrollbar-color:
+      rgba(123, 92, 255, 0.58)
+      rgba(255, 255, 255, 0.035);
+  }
+
+  #chat-container [class*="ChatContainer_virtuoso"]::-webkit-scrollbar,
+  #chat-container [data-virtuoso-scroller="true"]::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  #chat-container [class*="ChatContainer_virtuoso"]::-webkit-scrollbar-track,
+  #chat-container [data-virtuoso-scroller="true"]::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  #chat-container [class*="ChatContainer_virtuoso"]::-webkit-scrollbar-thumb,
+  #chat-container [data-virtuoso-scroller="true"]::-webkit-scrollbar-thumb {
+    background: rgba(123, 92, 255, 0.52);
+    border-radius: 8px;
+    border: 2px solid rgba(10, 12, 15, 0.95);
+  }
+
+  #chat-container [class*="ChatContainer_virtuoso"]::-webkit-scrollbar-thumb:hover,
+  #chat-container [data-virtuoso-scroller="true"]::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 42, 179, 0.58);
   }
 }
