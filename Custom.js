@@ -1,8 +1,10 @@
 /*
-Owncast Custom JS - V1.1
+Owncast Custom JS - V1.3
 Copyright 2023 Le fractal + Cobravideoclub
 
-V1.1:
+V1.3:
+- Fix single-emote enlargement when Android/Owncast inserts the emoji image after the message node
+- Reprocess the closest chat-message ancestor for DOM mutations
 - Reduce full-page DOM scans
 - Safer responsive picker positioning
 - Cache emoji API after first successful load
@@ -69,6 +71,22 @@ window.addEventListener("load", () => {
   function clamp(value, min, max) {
     if (max < min) return min;
     return Math.max(min, Math.min(max, value));
+  }
+
+  function queryIncludingRoot(root, selector) {
+    if (!root) return [];
+
+    const found = [];
+
+    if (root instanceof Element && root.matches(selector)) {
+      found.push(root);
+    }
+
+    if (root.querySelectorAll) {
+      found.push(...root.querySelectorAll(selector));
+    }
+
+    return found;
   }
 
   function throttleRaf(fn) {
@@ -192,7 +210,7 @@ window.addEventListener("load", () => {
   }
 
   function collectUserColorsAndMarkAdmin(root = document) {
-    const nameEls = root.querySelectorAll?.(SELECTOR_USERNAME) || [];
+    const nameEls = queryIncludingRoot(root, SELECTOR_USERNAME);
 
     nameEls.forEach((el) => {
       const name = normalizeSpaces(el.textContent);
@@ -206,7 +224,7 @@ window.addEventListener("load", () => {
   }
 
   function markEmoteOnlyMessages(root = document) {
-    const messages = root.querySelectorAll?.(SELECTOR_MESSAGE) || [];
+    const messages = queryIncludingRoot(root, SELECTOR_MESSAGE);
 
     messages.forEach((msgEl) => {
       msgEl.classList.remove("oc-emote-single");
@@ -323,7 +341,7 @@ window.addEventListener("load", () => {
   }
 
   function colorizeMentionsInAllMessages(root = document) {
-    const messages = root.querySelectorAll?.(SELECTOR_MESSAGE) || [];
+    const messages = queryIncludingRoot(root, SELECTOR_MESSAGE);
     messages.forEach(colorizeMentionsInNode);
   }
 
@@ -784,14 +802,36 @@ window.addEventListener("load", () => {
       if (!roots.size) {
         processChat(getChatRoot());
       } else {
-        roots.forEach((root) => {
-          collectUserColorsAndMarkAdmin(root);
-        });
+        const messageRoots = new Set();
 
         roots.forEach((root) => {
-          markEmoteOnlyMessages(root);
-          colorizeMentionsInAllMessages(root);
+          collectUserColorsAndMarkAdmin(root);
+
+          if (root.matches?.(SELECTOR_MESSAGE)) {
+            messageRoots.add(root);
+          }
+
+          const parentMessage = root.closest?.(SELECTOR_MESSAGE);
+          if (parentMessage) {
+            messageRoots.add(parentMessage);
+          }
+
+          root.querySelectorAll?.(SELECTOR_MESSAGE).forEach((message) => {
+            messageRoots.add(message);
+          });
         });
+
+        if (messageRoots.size) {
+          messageRoots.forEach((message) => {
+            markEmoteOnlyMessages(message);
+            colorizeMentionsInNode(message);
+          });
+        } else {
+          roots.forEach((root) => {
+            markEmoteOnlyMessages(root);
+            colorizeMentionsInAllMessages(root);
+          });
+        }
       }
 
       attachFieldObserver();
