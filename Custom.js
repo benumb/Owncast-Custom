@@ -1,6 +1,6 @@
 /*
 Owncast Custom JS - V1.3
-Copyright 2023 Le fractal + Cobravideoclub
+Copyright 2026 Cobravideoclub
 
 V1.3:
 - Fix single-emote enlargement when Android/Owncast inserts the emoji image after the message node
