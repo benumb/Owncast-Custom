@@ -1,490 +1,939 @@
 /*
-Copyright 2026
-Cobravideoclub
-Owncast Custom CSS - V1.1
+Owncast Custom JS - V1.6
+Copyright 2026 Cobravideoclub
+
+V1.6:
+- Fix Owncast custom JS initialization when the script is injected after window.load
+- Works whether the page is still loading or already loaded
+- Keep previous message accent and mobile/emote compatibility changes
+- Reduce full-page DOM scans
+- Safer responsive picker positioning
+- Cache emoji API after first successful load
+- More robust mention recoloring
+- Better contenteditable insertion fallback
+- Avoid duplicate field observers
 */
 
-/* =========================================================
-   Variables
-   ========================================================= */
-
-:root {
-  --header-height: 50px;
-
-  --darker-grey: #0b0c0d;
-  --lighter-grey: #131516;
-  --lighter-grey-2: #29292e;
-  --whitish: rgb(239, 239, 241);
-
-  --mention-fallback: #a970ff;
-
-  --admin-accent: #ffd54a;
-  --admin-bg: rgba(255, 213, 74, 0.14);
-  --admin-text: var(--whitish);
-
-  --oc-panel-bg: rgba(19, 21, 22, 0.96);
-  --oc-panel-border: rgba(255, 255, 255, 0.12);
-  --oc-panel-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
-  --oc-panel-text: rgba(255, 255, 255, 0.92);
-  --oc-panel-text-2: rgba(255, 255, 255, 0.70);
-}
-
-/* =========================================================
-   Global
-   ========================================================= */
-
-html,
-body {
-  background-color: var(--darker-grey);
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-/* =========================================================
-   Layout / Header / Sidebar
-   ========================================================= */
-
-[class*="Sidebar_root"] {
-  top: calc(var(--header-height) - 1px);
-}
-
-[class*="Header_header"],
-header {
-  background-color: var(--darker-grey);
-}
-
-/* =========================================================
-   Chat
-   ========================================================= */
-
-[class*="ChatContainer_virtuoso"] > div > div {
-  padding-inline: 0.6em !important;
-}
-
-[class*="ChatUserMessage_repeat"],
-[class*="ChatUserMessage_user"] {
-  display: inline !important;
-}
-
-[class*="ChatUserMessage_user_"]::after,
-[class*="ChatUserMessage_repeat"]::after {
-  content: ": ";
-  font-weight: 400;
-}
-
-[class*="ChatUserMessage_userBadges"] {
-  margin: 0 !important;
-}
-
-[class*="ChatUserBadge_badge_"] {
-  width: 10px !important;
-  height: 10px !important;
-  margin-left: 2px !important;
-}
-
-[class*="ChatUserMessage_message"] p {
-  display: inline;
-}
-
-[class*="ChatUserMessage_messagePadding"] {
-  padding: 0;
-}
-
-[class*="ChatUserMessage_root"],
-[class*="ChatUserMessage_ownMessage"] {
-  border: 0 !important;
-  margin-bottom: 2px !important;
-}
-
-[class*="ChatUserMessage_message"] {
-  line-height: 1.1;
-}
-
-[class*="ChatUserMessage_background"] {
-  background-color: transparent !important;
-}
-
-#chat-container {
-  background-color: var(--lighter-grey);
-}
-
-[class*="ChatContainer_chatTextField"] {
-  border-top: 0;
-}
-
-[class*="ChatTextField_root"] {
-  background-color: transparent;
-  color: var(--whitish);
-}
-
-[class*="ChatTextField_root"] :empty::before {
-  color: var(--theme-color-action);
-  font-weight: 700;
-}
-
-[class*="ChatTextField_inputWrap"] {
-  background-color: transparent !important;
-  border: 1px solid var(--theme-color-action);
-  color: var(--whitish) !important;
-}
-
-span[class*="ChatUserMessage_userName"] {
-  cursor: pointer;
-}
-
-/* Hover uniquement sur appareils ayant réellement un pointeur */
-@media (hover: hover) and (pointer: fine) {
-  span[class*="ChatUserMessage_userName"]:hover {
-    text-decoration: underline;
-  }
-}
-
-/* =========================================================
-   Emotes dans le chat
-   ========================================================= */
-
-img.emoji {
-  height: 28px !important;
-  width: auto !important;
-  vertical-align: middle !important;
-}
-
-.oc-emote-single img.emoji {
-  height: 80px !important;
-}
-
-/* =========================================================
-   Mentions
-   ========================================================= */
-
-.oc-mention {
-  font-weight: 800;
-  font-size: 1em;
-  background: rgba(169, 112, 255, 0.12);
-  padding: 2px 4px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-/* =========================================================
-   Admin
-   ========================================================= */
-
-.oc-admin-name {
-  position: relative;
-  font-weight: 800 !important;
-  text-shadow: 0 0 10px rgba(255, 213, 74, 0.35);
-}
-
-/* =========================================================
-   Emoji picker - bouton
-   ========================================================= */
-
-.oc-emoji-btn {
-  z-index: 2147483647;
-
-  display: grid;
-  place-items: center;
-
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
-
-  background: var(--oc-panel-bg);
-  color: var(--whitish);
-
-  padding: 0;
-
-  font-size: 16px;
-  line-height: 1;
-
-  cursor: pointer;
-
-  user-select: none;
-  -webkit-user-select: none;
-
-  touch-action: manipulation;
-  pointer-events: auto;
-}
-
-.oc-emoji-btn--fixed {
-  position: fixed;
-
-  width: 34px;
-  height: 34px;
-
-  right: 16px;
-
-  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-}
-
-/* =========================================================
-   Emoji picker - panneau
-   ========================================================= */
-
-.oc-emoji-panel {
-  position: fixed;
-
-  z-index: 2147483647;
-
-  width: min(360px, calc(100vw - 24px));
-  height: min(420px, calc(100vh - 24px));
-
-  border-radius: 14px;
-  border: 1px solid var(--oc-panel-border);
-
-  background: var(--oc-panel-bg);
-  box-shadow: var(--oc-panel-shadow);
-
-  color: var(--oc-panel-text);
-
-  overflow: hidden;
-
-  display: none;
-
-  pointer-events: auto;
-}
-
-.oc-emoji-panel.is-open {
-  display: flex;
-  flex-direction: column;
-}
-
-/* =========================================================
-   Emoji picker - header
-   ========================================================= */
-
-.oc-emoji-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 10px;
-
-  padding: 10px;
-
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-
-  flex: 0 0 auto;
-}
-
-.oc-emoji-title {
-  color: rgba(255, 255, 255, 0.9);
-
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.oc-emoji-close {
-  display: grid;
-  place-items: center;
-
-  width: 34px;
-  height: 34px;
-
-  padding: 0;
-
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 10px;
-
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.85);
-
-  line-height: 1;
-
-  cursor: pointer;
-
-  touch-action: manipulation;
-}
-
-/* =========================================================
-   Emoji picker - body
-   ========================================================= */
-
-.oc-emoji-panel-body {
-  flex: 1 1 auto;
-
-  min-height: 0;
-
-  padding: 10px;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  overscroll-behavior: contain;
-
-  scrollbar-width: thin;
-  scrollbar-color:
-    rgba(255, 255, 255, 0.25)
-    transparent;
-
-  -webkit-overflow-scrolling: touch;
-}
-
-.oc-emoji-panel-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.oc-emoji-panel-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
-}
-
-/* =========================================================
-   Emoji picker - grille
-   ========================================================= */
-
-.oc-emoji-grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(8, minmax(0, 1fr));
-
-  gap: 8px;
-
-  width: 100%;
-}
-
-.oc-emoji-tile {
-  display: grid;
-  place-items: center;
-
-  width: 100%;
-
-  min-width: 0;
-
-  aspect-ratio: 1 / 1;
-
-  padding: 0;
-
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 10px;
-
-  background: rgba(255, 255, 255, 0.03);
-
-  cursor: pointer;
-
-  touch-action: manipulation;
-}
-
-.oc-emoji-tile img {
-  display: block;
-
-  width: 38px;
-  height: 38px;
-
-  max-width: 100%;
-  max-height: 100%;
-
-  object-fit: contain;
-
-  pointer-events: none;
-}
-
-.oc-emoji-empty {
-  padding: 14px;
-
-  font-size: 14px;
-
-  color: var(--oc-panel-text-2);
-}
-
-/* =========================================================
-   Hover desktop
-   ========================================================= */
-
-@media (hover: hover) and (pointer: fine) {
-
-  .oc-emoji-btn:hover {
-    border-color: rgba(255, 255, 255, 0.28);
+function initOwncastCustom() {
+  "use strict";
+
+  const CHAT_INPUT_SELECTOR = "#chat-input-content-editable";
+  const ADMIN_DISPLAY_NAME = "Cobra Videoclub 🐍";
+
+  const SELECTOR_MESSAGE = '[class*="ChatUserMessage_message"]';
+  const SELECTOR_USERNAME = '[class*="ChatUserMessage_userName"]';
+  const SELECTOR_MESSAGE_ROOT =
+    '[class*="ChatUserMessage_root"], [class*="ChatUserMessage_ownMessage"]';
+  const SELECTOR_CHAT_ROOT =
+    '[class*="ChatContainer_virtuoso"], #chat-container';
+  const SELECTOR_CHAT_FIELD =
+    '[class*="ChatTextField_root"], [class*="ChatContainer_chatTextField"]';
+
+  const FALLBACK_BUTTON_SIZE = 34;
+  const PANEL_MARGIN = 8;
+  const PANEL_GAP = 12;
+
+  let emojiList = [];
+  let emojiLoaded = false;
+  let isOpen = false;
+  let observedField = null;
+
+  const nameToColor = new Map();
+
+  function normalizeSpaces(value) {
+    return String(value || "").trim().replace(/\s+/g, " ");
   }
 
-  .oc-emoji-close:hover {
-    border-color: rgba(255, 255, 255, 0.24);
-    background: rgba(255, 255, 255, 0.06);
+  function normalizeForCompare(name) {
+    const clean = normalizeSpaces(name).toLowerCase();
+    try {
+      return clean.replace(/\s*[\p{Extended_Pictographic}\p{So}]+$/u, "");
+    } catch {
+      return clean;
+    }
   }
 
-  .oc-emoji-tile:hover {
-    border-color: rgba(255, 255, 255, 0.18);
-    transform: translateY(-1px);
+  const ADMIN_KEY = normalizeForCompare(ADMIN_DISPLAY_NAME);
+
+  function isAdminName(name) {
+    return normalizeForCompare(name) === ADMIN_KEY;
   }
-}
 
-/* =========================================================
-   Responsive
-   ========================================================= */
+  function getChatBox() {
+    return document.querySelector(CHAT_INPUT_SELECTOR);
+  }
 
-@media (max-width: 420px) {
+  function getChatFieldRoot() {
+    return document.querySelector(SELECTOR_CHAT_FIELD);
+  }
 
-  .oc-emoji-panel {
-    width: calc(100vw - 16px);
+  function getChatRoot() {
+    return document.querySelector(SELECTOR_CHAT_ROOT) || document.body;
+  }
 
-    max-height:
-      calc(
-        100dvh
-        - 16px
-        - env(safe-area-inset-top, 0px)
-        - env(safe-area-inset-bottom, 0px)
+  function clamp(value, min, max) {
+    if (max < min) return min;
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function queryIncludingRoot(root, selector) {
+    if (!root) return [];
+
+    const found = [];
+
+    if (root instanceof Element && root.matches(selector)) {
+      found.push(root);
+    }
+
+    if (root.querySelectorAll) {
+      found.push(...root.querySelectorAll(selector));
+    }
+
+    return found;
+  }
+
+  function throttleRaf(fn) {
+    let scheduled = false;
+    let latestArgs = null;
+
+    return (...args) => {
+      latestArgs = args;
+      if (scheduled) return;
+
+      scheduled = true;
+      requestAnimationFrame(() => {
+        scheduled = false;
+        fn(...latestArgs);
+      });
+    };
+  }
+
+  function ensureCaretInside(el) {
+    if (!el) return null;
+
+    const doc = el.ownerDocument || document;
+    const win = doc.defaultView || window;
+    const selection = win.getSelection?.();
+
+    if (!selection) return null;
+
+    try {
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (el.contains(range.commonAncestorContainer)) return selection;
+      }
+
+      const range = doc.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      return selection;
+    } catch {
+      return selection;
+    }
+  }
+
+  function fireInput(el, text = "") {
+    try {
+      el.dispatchEvent(
+        new InputEvent("input", {
+          bubbles: true,
+          inputType: "insertText",
+          data: text,
+        })
       );
+    } catch {
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    }
   }
 
-  .oc-emoji-grid {
-    grid-template-columns:
-      repeat(7, minmax(0, 1fr));
+  function insertTextAtCaret(el, text) {
+    if (!el) return;
+
+    el.focus();
+
+    const doc = el.ownerDocument || document;
+    const selection = ensureCaretInside(el);
+
+    const currentText = el.textContent || "";
+    const addSpaceBefore =
+      currentText &&
+      !currentText.endsWith(" ") &&
+      text &&
+      !text.startsWith(" ");
+
+    const insertText = `${addSpaceBefore ? " " : ""}${text} `;
+
+    try {
+      if (
+        typeof doc.execCommand === "function" &&
+        (!doc.queryCommandSupported ||
+          doc.queryCommandSupported("insertText"))
+      ) {
+        const inserted = doc.execCommand(
+          "insertText",
+          false,
+          insertText
+        );
+
+        if (inserted) {
+          fireInput(el, insertText);
+          return;
+        }
+      }
+    } catch {
+      // Use Range fallback below.
+    }
+
+    try {
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+
+        const node = doc.createTextNode(insertText);
+        range.insertNode(node);
+        range.setStartAfter(node);
+        range.collapse(true);
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        fireInput(el, insertText);
+        return;
+      }
+    } catch {
+      // Last-resort fallback below.
+    }
+
+    el.textContent = currentText + insertText;
+    fireInput(el, insertText);
   }
 
-  .oc-emoji-panel-header {
-    padding: 8px;
+  function collectUserColorsAndMarkAdmin(root = document) {
+    const nameEls = queryIncludingRoot(root, SELECTOR_USERNAME);
+
+    nameEls.forEach((el) => {
+      const name = normalizeSpaces(el.textContent);
+      if (!name) return;
+
+      const color = getComputedStyle(el).color;
+      if (color) nameToColor.set(name, color);
+
+      el.classList.toggle("oc-admin-name", isAdminName(name));
+    });
   }
 
-  .oc-emoji-panel-body {
-    padding: 8px;
+  function applyMessageAccentColors(root = document) {
+    const usernames = queryIncludingRoot(root, SELECTOR_USERNAME);
+
+    usernames.forEach((usernameEl) => {
+      const color = getComputedStyle(usernameEl).color;
+      if (!color) return;
+
+      const messageRoot =
+        usernameEl.closest(SELECTOR_MESSAGE_ROOT) ||
+        usernameEl.closest('[class*="ChatUserMessage_"]');
+
+      if (!messageRoot) return;
+
+      messageRoot.classList.add("oc-message-accent");
+      messageRoot.style.setProperty("--oc-message-accent-color", color);
+    });
   }
-}
 
-/* Très petits téléphones */
+  function markEmoteOnlyMessages(root = document) {
+    const scope = root?.querySelectorAll ? root : document;
 
-@media (max-width: 340px) {
+    // Clear previous direct-image markers in this scope.
+    if (root instanceof HTMLImageElement && root.matches("img.emoji")) {
+      root.classList.remove("oc-emote-single-img");
+    }
 
-  .oc-emoji-grid {
-    grid-template-columns:
-      repeat(6, minmax(0, 1fr));
+    scope
+      .querySelectorAll?.("img.emoji.oc-emote-single-img")
+      .forEach((img) => img.classList.remove("oc-emote-single-img"));
+
+    const images = [];
+
+    if (root instanceof HTMLImageElement && root.matches("img.emoji")) {
+      images.push(root);
+    }
+
+    scope.querySelectorAll?.("img.emoji").forEach((img) => images.push(img));
+
+    images.forEach((img) => {
+      // Prefer Owncast's message content wrapper, but provide fallbacks
+      // for alternate/mobile DOM layouts.
+      const message =
+        img.closest(SELECTOR_MESSAGE) ||
+        img.closest('[class*="ChatUserMessage_messagePadding"]') ||
+        img.parentElement;
+
+      if (!message) return;
+
+      const emojis = message.querySelectorAll("img.emoji");
+      if (emojis.length !== 1) return;
+
+      // Clone the message content and remove the emoji.
+      // If nothing visible remains, this is an emote-only message.
+      const clone = message.cloneNode(true);
+      clone.querySelectorAll("img.emoji").forEach((emoji) => emoji.remove());
+
+      const remainingText = (clone.textContent || "")
+        .replace(/\u200B/g, "")
+        .replace(/\u00A0/g, " ")
+        .replace(/\s+/g, "")
+        .trim();
+
+      if (!remainingText) {
+        img.classList.add("oc-emote-single-img");
+        message.classList.add("oc-emote-single");
+      } else {
+        img.classList.remove("oc-emote-single-img");
+        message.classList.remove("oc-emote-single");
+      }
+    });
   }
-}
 
-/* =========================================================
-   Accessibilité
-   ========================================================= */
+  function buildMentionRegex(names) {
+    const sorted = [...names]
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length);
 
-@media (prefers-reduced-motion: reduce) {
+    if (!sorted.length) return null;
 
-  .oc-emoji-tile {
-    transform: none !important;
+    const escaped = sorted.map((name) =>
+      name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    );
+
+    return new RegExp(
+      `(^|\\s)@(${escaped.join("|")})(?=$|\\s|[.,!?;:])`,
+      "g"
+    );
   }
-}
-/* Liseré couleur utilisateur */
-.oc-message-accent {
-  position: relative;
-  padding-left: 8px !important;
-}
 
-.oc-message-accent::before {
-  content: "";
-  position: absolute;
+  function colorizeMentionsInNode(msgEl) {
+    if (!msgEl) return;
 
-  left: 0;
-  top: 3px;
-  bottom: 3px;
+    const names = Array.from(nameToColor.keys());
+    const rx = buildMentionRegex(names);
+    if (!rx) return;
 
-  width: 2px;
+    const walker = document.createTreeWalker(
+      msgEl,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          if (!node.nodeValue?.includes("@")) {
+            return NodeFilter.FILTER_REJECT;
+          }
 
-  border-radius: 2px;
+          const parent = node.parentElement;
+          if (!parent) return NodeFilter.FILTER_REJECT;
 
-  background-color: var(
-    --oc-message-accent-color,
-    var(--theme-color-action)
+          if (parent.closest(".oc-mention")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          if (parent.closest("a, button, input, textarea")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      }
+    );
+
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach((textNode) => {
+      const text = textNode.nodeValue || "";
+      rx.lastIndex = 0;
+
+      let match;
+      let last = 0;
+      let changed = false;
+
+      const fragment = document.createDocumentFragment();
+
+      while ((match = rx.exec(text)) !== null) {
+        const full = match[0];
+        const leading = match[1] || "";
+        const name = match[2] || "";
+        const start = match.index;
+
+        fragment.appendChild(
+          document.createTextNode(text.slice(last, start))
+        );
+
+        if (leading) {
+          fragment.appendChild(
+            document.createTextNode(leading)
+          );
+        }
+
+        const span = document.createElement("span");
+        span.className = "oc-mention";
+        span.style.color =
+          nameToColor.get(name) || "var(--mention-fallback)";
+        span.textContent = `@${name}`;
+
+        fragment.appendChild(span);
+
+        last = start + full.length;
+        changed = true;
+      }
+
+      if (!changed) return;
+
+      fragment.appendChild(
+        document.createTextNode(text.slice(last))
+      );
+
+      textNode.parentNode?.replaceChild(fragment, textNode);
+    });
+  }
+
+  function colorizeMentionsInAllMessages(root = document) {
+    const messages = queryIncludingRoot(root, SELECTOR_MESSAGE);
+    messages.forEach(colorizeMentionsInNode);
+  }
+
+  function processChat(root = getChatRoot()) {
+    collectUserColorsAndMarkAdmin(root);
+    applyMessageAccentColors(root);
+    markEmoteOnlyMessages(root);
+    colorizeMentionsInAllMessages(root);
+  }
+
+  document.body.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const username = target.closest(SELECTOR_USERNAME);
+    if (!username) return;
+
+    const name = normalizeSpaces(username.textContent);
+    if (!name) return;
+
+    const color = getComputedStyle(username).color;
+    if (color) nameToColor.set(name, color);
+
+    insertTextAtCaret(getChatBox(), `@${name}`);
+  });
+
+  const btn = document.createElement("button");
+  btn.className = "oc-emoji-btn oc-emoji-btn--fixed";
+  btn.type = "button";
+  btn.title = "Emotes";
+  btn.setAttribute("aria-label", "Ouvrir les emotes");
+  btn.setAttribute("aria-expanded", "false");
+  btn.textContent = "🙂";
+
+  const panel = document.createElement("div");
+  panel.className = "oc-emoji-panel";
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-label", "Emotes");
+
+  panel.innerHTML = `
+    <div class="oc-emoji-panel-header">
+      <div class="oc-emoji-title">Emotes</div>
+      <button
+        class="oc-emoji-close"
+        type="button"
+        aria-label="Fermer"
+      >✕</button>
+    </div>
+    <div class="oc-emoji-panel-body">
+      <div class="oc-emoji-grid"></div>
+      <div class="oc-emoji-empty" hidden>
+        Aucune emote trouvée.
+      </div>
+    </div>
+  `;
+
+  document.body.append(btn, panel);
+
+  const grid = panel.querySelector(".oc-emoji-grid");
+  const empty = panel.querySelector(".oc-emoji-empty");
+  const closeBtn = panel.querySelector(".oc-emoji-close");
+
+  function normalizeEmojiApi(data) {
+    if (Array.isArray(data)) {
+      return data
+        .map((item) => ({
+          name: String(item?.name || ""),
+          url: String(item?.url || ""),
+        }))
+        .filter((item) => item.name && item.url);
+    }
+
+    if (data && typeof data === "object") {
+      return Object.entries(data)
+        .map(([name, url]) => ({
+          name: String(name),
+          url: String(url),
+        }))
+        .filter((item) => item.name && item.url);
+    }
+
+    return [];
+  }
+
+  async function loadEmojis(force = false) {
+    if (emojiLoaded && !force) return emojiList;
+
+    try {
+      const response = await fetch("/api/emoji", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `/api/emoji returned ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
+      emojiList = normalizeEmojiApi(data)
+        .filter((emoji) => emoji.url.includes("/img/emoji/"))
+        .sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, {
+            sensitivity: "base",
+          })
+        );
+
+      emojiLoaded = true;
+    } catch (error) {
+      console.error(
+        "[oc-emotes] failed to load /api/emoji",
+        error
+      );
+
+      emojiList = [];
+      emojiLoaded = false;
+    }
+
+    return emojiList;
+  }
+
+  function renderGrid() {
+    if (!grid || !empty) return;
+
+    grid.replaceChildren();
+
+    if (!emojiList.length) {
+      empty.hidden = false;
+      return;
+    }
+
+    empty.hidden = true;
+
+    const fragment = document.createDocumentFragment();
+
+    for (const emoji of emojiList) {
+      const tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "oc-emoji-tile";
+      tile.title = `:${emoji.name}:`;
+      tile.setAttribute(
+        "aria-label",
+        `Insérer :${emoji.name}:`
+      );
+
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.alt = "";
+      img.src = emoji.url;
+
+      tile.appendChild(img);
+
+      tile.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        insertTextAtCaret(
+          getChatBox(),
+          `:${emoji.name}:`
+        );
+
+        closePanel();
+      });
+
+      fragment.appendChild(tile);
+    }
+
+    grid.appendChild(fragment);
+  }
+
+  function openPanel() {
+    isOpen = true;
+    panel.classList.add("is-open");
+    btn.setAttribute("aria-expanded", "true");
+
+    positionOverlay();
+    positionPanel();
+    renderGrid();
+  }
+
+  function closePanel() {
+    isOpen = false;
+    panel.classList.remove("is-open");
+    btn.setAttribute("aria-expanded", "false");
+  }
+
+  closeBtn?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closePanel();
+  });
+
+  btn.addEventListener(
+    "click",
+    async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (isOpen) {
+        closePanel();
+        return;
+      }
+
+      await loadEmojis();
+      openPanel();
+    },
+    true
   );
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isOpen) {
+      closePanel();
+      btn.focus();
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!isOpen) return;
+
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+
+    if (panel.contains(target) || btn.contains(target)) {
+      return;
+    }
+
+    closePanel();
+  });
+
+  function findNativeEmojiButton() {
+    const chatField = getChatFieldRoot();
+    const scope = chatField || document;
+
+    const buttons = Array.from(
+      scope.querySelectorAll("button")
+    );
+
+    const labeled = buttons.find((button) => {
+      const label = String(
+        button.getAttribute("aria-label") ||
+          button.title ||
+          ""
+      ).toLowerCase();
+
+      return (
+        label.includes("emoji") ||
+        label.includes("emote")
+      );
+    });
+
+    if (labeled) return labeled;
+
+    if (chatField) {
+      const nearbyButtons = Array.from(
+        chatField.querySelectorAll("button")
+      );
+
+      if (nearbyButtons.length) {
+        return nearbyButtons[nearbyButtons.length - 1];
+      }
+    }
+
+    return null;
+  }
+
+  const positionOverlay = throttleRaf(() => {
+    const nativeBtn = findNativeEmojiButton();
+
+    if (!nativeBtn?.parentElement) {
+      if (btn.parentElement !== document.body) {
+        document.body.appendChild(btn);
+      }
+
+      btn.classList.add("oc-emoji-btn--fixed");
+
+      btn.style.position = "";
+      btn.style.left = "";
+      btn.style.top = "";
+      btn.style.right = "";
+      btn.style.bottom = "";
+      btn.style.width = "";
+      btn.style.height = "";
+
+      return;
+    }
+
+    const parent = nativeBtn.parentElement;
+    const parentStyle = getComputedStyle(parent);
+
+    if (parentStyle.position === "static") {
+      parent.style.position = "relative";
+    }
+
+    if (btn.parentElement !== parent) {
+      parent.appendChild(btn);
+    }
+
+    btn.classList.remove("oc-emoji-btn--fixed");
+    btn.style.position = "absolute";
+
+    const nativeRect = nativeBtn.getBoundingClientRect();
+    const parentRect = parent.getBoundingClientRect();
+
+    const left =
+      nativeRect.left -
+      parentRect.left +
+      parent.scrollLeft;
+
+    const top =
+      nativeRect.top -
+      parentRect.top +
+      parent.scrollTop;
+
+    btn.style.left = `${left}px`;
+    btn.style.top = `${top}px`;
+    btn.style.right = "";
+    btn.style.bottom = "";
+
+    btn.style.width =
+      `${nativeRect.width || FALLBACK_BUTTON_SIZE}px`;
+
+    btn.style.height =
+      `${nativeRect.height || FALLBACK_BUTTON_SIZE}px`;
+
+    nativeBtn.style.setProperty(
+      "opacity",
+      "0",
+      "important"
+    );
+
+    nativeBtn.style.setProperty(
+      "pointer-events",
+      "none",
+      "important"
+    );
+  });
+
+  function positionPanel() {
+    if (!isOpen) return;
+
+    const buttonRect = btn.getBoundingClientRect();
+
+    const viewportWidth =
+      document.documentElement.clientWidth ||
+      window.innerWidth;
+
+    const viewportHeight =
+      window.visualViewport?.height ||
+      document.documentElement.clientHeight ||
+      window.innerHeight;
+
+    const panelRect = panel.getBoundingClientRect();
+
+    const panelWidth =
+      panelRect.width ||
+      Math.min(360, viewportWidth - PANEL_MARGIN * 2);
+
+    const panelHeight =
+      panelRect.height ||
+      Math.min(420, viewportHeight - PANEL_MARGIN * 2);
+
+    let left = buttonRect.right - panelWidth;
+    left = clamp(
+      left,
+      PANEL_MARGIN,
+      viewportWidth - panelWidth - PANEL_MARGIN
+    );
+
+    const roomAbove =
+      buttonRect.top - PANEL_GAP - PANEL_MARGIN;
+
+    const roomBelow =
+      viewportHeight -
+      buttonRect.bottom -
+      PANEL_GAP -
+      PANEL_MARGIN;
+
+    let top;
+
+    if (
+      roomAbove >= panelHeight ||
+      roomAbove >= roomBelow
+    ) {
+      top = buttonRect.top - panelHeight - PANEL_GAP;
+    } else {
+      top = buttonRect.bottom + PANEL_GAP;
+    }
+
+    top = clamp(
+      top,
+      PANEL_MARGIN,
+      viewportHeight - panelHeight - PANEL_MARGIN
+    );
+
+    panel.style.left = `${left}px`;
+    panel.style.top = `${top}px`;
+    panel.style.right = "";
+    panel.style.bottom = "";
+  }
+
+  const reposition = throttleRaf(() => {
+    positionOverlay();
+
+    if (isOpen) {
+      positionPanel();
+    }
+  });
+
+  window.addEventListener("resize", reposition, {
+    passive: true,
+  });
+
+  window.addEventListener("orientationchange", reposition);
+
+  window.visualViewport?.addEventListener(
+    "resize",
+    reposition,
+    { passive: true }
+  );
+
+  window.visualViewport?.addEventListener(
+    "scroll",
+    reposition,
+    { passive: true }
+  );
+
+  const fieldObserver = new MutationObserver(reposition);
+
+  function attachFieldObserver() {
+    const root = getChatFieldRoot();
+    if (!root || root === observedField) return Boolean(root);
+
+    fieldObserver.disconnect();
+    observedField = root;
+
+    fieldObserver.observe(root, {
+      childList: true,
+      subtree: true,
+    });
+
+    return true;
+  }
+
+  const chatObserver = new MutationObserver(
+    throttleRaf((mutations) => {
+      const roots = new Set();
+
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node instanceof Element) {
+            roots.add(node);
+          }
+        }
+      }
+
+      if (!roots.size) {
+        processChat(getChatRoot());
+      } else {
+        const messageRoots = new Set();
+
+        roots.forEach((root) => {
+          collectUserColorsAndMarkAdmin(root);
+          applyMessageAccentColors(root);
+
+          if (root.matches?.(SELECTOR_MESSAGE)) {
+            messageRoots.add(root);
+          }
+
+          const parentMessage = root.closest?.(SELECTOR_MESSAGE);
+          if (parentMessage) {
+            messageRoots.add(parentMessage);
+          }
+
+          root.querySelectorAll?.(SELECTOR_MESSAGE).forEach((message) => {
+            messageRoots.add(message);
+          });
+        });
+
+        if (messageRoots.size) {
+          messageRoots.forEach((message) => {
+            markEmoteOnlyMessages(message);
+            colorizeMentionsInNode(message);
+          });
+        } else {
+          roots.forEach((root) => {
+            markEmoteOnlyMessages(root);
+            colorizeMentionsInAllMessages(root);
+          });
+        }
+      }
+
+      // Owncast/React can update the emoji image independently of the
+      // surrounding message, especially on mobile. Re-scan emoji-only
+      // messages after every throttled chat mutation.
+      markEmoteOnlyMessages(getChatRoot());
+
+      attachFieldObserver();
+      reposition();
+    })
+  );
+
+  function attachChatObserver() {
+    const root = getChatRoot();
+
+    chatObserver.disconnect();
+
+    chatObserver.observe(root, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  function bootstrap() {
+    processChat(getChatRoot());
+    positionOverlay();
+    attachFieldObserver();
+    attachChatObserver();
+  }
+
+  loadEmojis().then(renderGrid);
+
+  bootstrap();
+
+  // Owncast mounts/replaces parts of the UI asynchronously.
+  setTimeout(bootstrap, 300);
+  setTimeout(bootstrap, 900);
+  setTimeout(bootstrap, 1600);
+}
+
+if (document.readyState === "loading") {
+  window.addEventListener("load", initOwncastCustom, { once: true });
+} else {
+  initOwncastCustom();
 }
