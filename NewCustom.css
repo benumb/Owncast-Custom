@@ -1,6 +1,6 @@
 /*
 Copyright 2026 Cobra Videoclub
-Owncast Custom CSS - V2.4
+Owncast Custom CSS - V2.5
 Stable / Performance
 */
 
@@ -60,8 +60,12 @@ html, body { background-color: var(--darker-grey); }
 [class*="ChatUserMessage_background"] { background-color: transparent !important; }
 
 .oc-message-accent {
-  border-left: 2px solid var(--oc-message-accent-color, var(--theme-color-action));
   padding-left: 7px !important;
+  box-shadow:
+    inset 2px 0 0 var(
+      --oc-message-accent-color,
+      var(--theme-color-action)
+    );
 }
 
 span[class*="ChatUserMessage_userName"] { cursor: pointer; }
