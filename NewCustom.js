@@ -1,5 +1,5 @@
 /*
-Owncast Custom JS - V2.2
+Owncast Custom JS - V2.3
 Copyright 2026 Cobra Videoclub
 
 V2.1:
