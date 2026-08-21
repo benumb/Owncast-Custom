@@ -1,6 +1,6 @@
 /*
 Copyright 2026 Cobra Videoclub
-Owncast Custom CSS - V2.5
+Owncast Custom CSS - V2.6
 Stable / Performance
 */
 
@@ -254,4 +254,38 @@ img.emoji.oc-emote-single-img {
   .oc-emoji-btn:hover { border-color: rgba(255,255,255,0.28); }
   .oc-emoji-close:hover { border-color: rgba(255,255,255,0.24); }
   .oc-emoji-tile:hover { border-color: rgba(255,255,255,0.18); }
+}
+
+
+/* =========================================================
+   V2.6 — Visible desktop scrollbar
+   Styling only: does not change Virtuoso overflow or layout.
+   ========================================================= */
+
+@media (min-width: 721px) {
+  .oc-chat-scroller {
+    scrollbar-width: auto !important;
+    scrollbar-color:
+      rgba(123, 92, 255, 0.72)
+      rgba(255, 255, 255, 0.04) !important;
+  }
+
+  .oc-chat-scroller::-webkit-scrollbar {
+    width: 8px !important;
+    display: block !important;
+  }
+
+  .oc-chat-scroller::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .oc-chat-scroller::-webkit-scrollbar-thumb {
+    background: rgba(123, 92, 255, 0.68);
+    border-radius: 8px;
+    border: 2px solid var(--lighter-grey);
+  }
+
+  .oc-chat-scroller::-webkit-scrollbar-thumb:hover {
+    background: rgba(169, 112, 255, 0.88);
+  }
 }
