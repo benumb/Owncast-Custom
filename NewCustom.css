@@ -1,90 +1,31 @@
 /*
 Copyright 2026 Cobra Videoclub
-Owncast Custom CSS - V2.3
+Owncast Custom CSS - V2.4
+Stable / Performance
 */
-
-/* =========================================================
-   Cobra Videoclub — Core
-   ========================================================= */
 
 :root {
   --header-height: 50px;
-
-  --cobra-bg: #090a0c;
-  --cobra-bg-2: #101216;
-  --cobra-bg-3: #171a20;
-  --cobra-panel: rgba(15, 17, 22, 0.97);
-
-  --cobra-text: #f2f2f4;
-  --cobra-text-muted: rgba(242, 242, 244, 0.62);
-
-  --cobra-purple: #6847f5;
-  --cobra-purple-2: #7b5cff;
-  --cobra-magenta: #ff2ab3;
-  --cobra-cyan: #20c8ff;
-
-  --cobra-line: rgba(255, 255, 255, 0.10);
-  --cobra-line-strong: rgba(255, 255, 255, 0.16);
-
-  --cobra-glow-purple: 0 0 14px rgba(104, 71, 245, 0.22);
-  --cobra-glow-magenta: 0 0 12px rgba(255, 42, 179, 0.18);
-
-  --mention-fallback: var(--cobra-purple-2);
-
-  --oc-panel-bg: rgba(12, 14, 18, 0.98);
-  --oc-panel-border: rgba(104, 71, 245, 0.42);
-  --oc-panel-shadow:
-    0 18px 60px rgba(0, 0, 0, 0.62),
-    0 0 22px rgba(104, 71, 245, 0.12);
-  --oc-panel-text: rgba(255, 255, 255, 0.94);
-  --oc-panel-text-2: rgba(255, 255, 255, 0.62);
+  --darker-grey: #0b0c0d;
+  --lighter-grey: #131516;
+  --whitish: rgb(239, 239, 241);
+  --mention-fallback: #a970ff;
+  --oc-panel-bg: rgba(19, 21, 22, 0.98);
+  --oc-panel-border: rgba(255,255,255,0.12);
+  --oc-panel-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  --oc-panel-text: rgba(255,255,255,0.92);
+  --oc-panel-text-2: rgba(255,255,255,0.70);
 }
 
-html,
-body {
-  background: var(--cobra-bg);
-}
+html, body { background-color: var(--darker-grey); }
+*, *::before, *::after { box-sizing: border-box; }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-/* =========================================================
-   Header / Layout
-   ========================================================= */
-
-[class*="Sidebar_root"] {
-  top: calc(var(--header-height) - 1px);
-}
-
-[class*="Header_header"],
-header {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(12, 13, 16, 0.98),
-      rgba(8, 9, 11, 0.98)
-    ) !important;
-  border-bottom: 1px solid rgba(104, 71, 245, 0.16);
-}
-
-#chat-container {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(15, 17, 21, 0.99),
-      rgba(10, 12, 15, 0.99)
-    );
-}
-
-/* =========================================================
-   Chat rhythm
-   ========================================================= */
+[class*="Sidebar_root"] { top: calc(var(--header-height) - 1px); }
+[class*="Header_header"], header { background-color: var(--darker-grey); }
+#chat-container { background-color: var(--lighter-grey); }
 
 [class*="ChatContainer_virtuoso"] > div > div {
-  padding-inline: 0.72em !important;
+  padding-inline: 0.6em !important;
 }
 
 [class*="ChatUserMessage_repeat"],
@@ -95,164 +36,62 @@ header {
 [class*="ChatUserMessage_user_"]::after,
 [class*="ChatUserMessage_repeat"]::after {
   content: ": ";
-  font-weight: 500;
-  opacity: 0.9;
+  font-weight: 400;
 }
 
-[class*="ChatUserMessage_userBadges"] {
-  margin: 0 !important;
-}
+[class*="ChatUserMessage_userBadges"] { margin: 0 !important; }
 
 [class*="ChatUserBadge_badge_"] {
-  width: 11px !important;
-  height: 11px !important;
-  margin-left: 3px !important;
+  width: 10px !important;
+  height: 10px !important;
+  margin-left: 2px !important;
 }
 
-[class*="ChatUserMessage_message"] p {
-  display: inline;
-}
-
-[class*="ChatUserMessage_messagePadding"] {
-  padding: 0;
-}
+[class*="ChatUserMessage_message"] p { display: inline; }
+[class*="ChatUserMessage_messagePadding"] { padding: 0; }
 
 [class*="ChatUserMessage_root"],
 [class*="ChatUserMessage_ownMessage"] {
-  position: relative;
   border: 0 !important;
-  margin-bottom: 4px !important;
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
+  margin-bottom: 2px !important;
 }
 
-[class*="ChatUserMessage_message"] {
-  line-height: 1.16;
-  letter-spacing: 0.005em;
-}
-
-[class*="ChatUserMessage_background"] {
-  background: transparent !important;
-}
-
-/* =========================================================
-   User accent line
-   ========================================================= */
+[class*="ChatUserMessage_message"] { line-height: 1.1; }
+[class*="ChatUserMessage_background"] { background-color: transparent !important; }
 
 .oc-message-accent {
-  position: relative;
-  padding-left: 9px !important;
+  border-left: 2px solid var(--oc-message-accent-color, var(--theme-color-action));
+  padding-left: 7px !important;
 }
 
-.oc-message-accent::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 3px;
-  bottom: 3px;
-  width: 2px;
-  border-radius: 2px;
-  background: var(
-    --oc-message-accent-color,
-    var(--cobra-purple)
-  );
-  box-shadow:
-    0 0 7px color-mix(
-      in srgb,
-      var(--oc-message-accent-color, var(--cobra-purple)) 48%,
-      transparent
-    );
-}
-
-/* =========================================================
-   Usernames / mentions / admin
-   ========================================================= */
-
-span[class*="ChatUserMessage_userName"] {
-  cursor: pointer;
-  font-weight: 800 !important;
-  letter-spacing: 0.01em;
-  text-shadow: 0 0 8px rgba(255,255,255,0.03);
-}
-
-.oc-admin-name {
-  font-weight: 900 !important;
-  text-shadow:
-    0 0 9px rgba(255, 42, 179, 0.26),
-    0 0 16px rgba(104, 71, 245, 0.16);
-}
+span[class*="ChatUserMessage_userName"] { cursor: pointer; }
+.oc-admin-name { font-weight: 800 !important; }
 
 .oc-mention {
-  display: inline-block;
   font-weight: 800;
-  font-size: 0.96em;
-  line-height: 1.2;
-  padding: 1px 5px;
-  margin-inline: 1px;
+  font-size: 1em;
+  background: rgba(169, 112, 255, 0.12);
+  padding: 2px 4px;
   border-radius: 4px;
   white-space: nowrap;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(104, 71, 245, 0.18),
-      rgba(255, 42, 179, 0.09)
-    );
-  border: 1px solid rgba(104, 71, 245, 0.22);
 }
 
-/* =========================================================
-   Chat input
-   ========================================================= */
-
-[class*="ChatContainer_chatTextField"] {
-  border-top: 1px solid rgba(104, 71, 245, 0.16);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(10, 12, 15, 0.88),
-      rgba(7, 8, 10, 0.98)
-    );
-}
-
+[class*="ChatContainer_chatTextField"] { border-top: none; }
 [class*="ChatTextField_root"] {
-  background: transparent !important;
-  color: var(--cobra-text);
+  background-color: transparent;
+  color: var(--whitish);
 }
 
 [class*="ChatTextField_root"] :empty::before {
-  color: var(--cobra-purple-2) !important;
-  font-weight: 800;
-  opacity: 0.9;
+  color: var(--theme-color-action);
+  font-weight: 700;
 }
 
 [class*="ChatTextField_inputWrap"] {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(20, 22, 28, 0.94),
-      rgba(13, 15, 19, 0.98)
-    ) !important;
-  color: var(--cobra-text) !important;
-  border: 1px solid rgba(104, 71, 245, 0.72) !important;
-  border-radius: 8px !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.025),
-    0 0 0 1px rgba(104,71,245,0.05);
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
+  background-color: transparent !important;
+  border: 1px solid var(--theme-color-action);
+  color: var(--whitish) !important;
 }
-
-[class*="ChatTextField_inputWrap"]:focus-within {
-  border-color: var(--cobra-purple-2) !important;
-  box-shadow:
-    0 0 0 1px rgba(104, 71, 245, 0.24),
-    0 0 14px rgba(104, 71, 245, 0.16);
-}
-
-/* =========================================================
-   Emotes in chat
-   ========================================================= */
 
 img.emoji {
   height: 28px !important;
@@ -264,26 +103,16 @@ img.emoji {
 img.emoji.oc-emote-single-img {
   height: 80px !important;
   width: auto !important;
-  filter: drop-shadow(0 0 10px rgba(104, 71, 245, 0.12));
 }
-
-/* =========================================================
-   Custom emoji button
-   ========================================================= */
 
 .oc-emoji-btn {
   z-index: 2147483647;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  border: 1px solid rgba(104, 71, 245, 0.38);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(28, 30, 37, 0.98),
-      rgba(15, 17, 22, 0.98)
-    );
-  color: var(--cobra-text);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(19, 21, 22, 0.98);
+  color: var(--whitish);
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
@@ -292,9 +121,6 @@ img.emoji.oc-emote-single-img {
   font-size: 16px;
   pointer-events: auto;
   touch-action: manipulation;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.025),
-    0 0 10px rgba(104, 71, 245, 0.10);
 }
 
 .oc-emoji-btn--fixed {
@@ -305,22 +131,16 @@ img.emoji.oc-emote-single-img {
   bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }
 
-/* =========================================================
-   Emoji panel
-   ========================================================= */
-
 .oc-emoji-panel {
-  position: fixed;
-  z-index: 2147483647;
-  width: min(360px, calc(100vw - 24px));
-  height: min(420px, calc(100vh - 24px));
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  width: min(360px, calc(100vw - 16px));
+  height: min(420px, calc(100dvh - 16px));
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  margin: 0 !important;
   border-radius: 10px;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(18, 20, 25, 0.99),
-      rgba(10, 12, 16, 0.99)
-    );
+  background: var(--oc-panel-bg);
   border: 1px solid var(--oc-panel-border);
   box-shadow: var(--oc-panel-shadow);
   overflow: hidden;
@@ -330,7 +150,7 @@ img.emoji.oc-emote-single-img {
 }
 
 .oc-emoji-panel.is-open {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
 }
 
@@ -340,73 +160,43 @@ img.emoji.oc-emote-single-img {
   gap: 10px;
   align-items: center;
   justify-content: space-between;
-  min-height: 46px;
   padding: 8px 10px;
-  border-bottom: 1px solid rgba(104, 71, 245, 0.18);
-  background:
-    linear-gradient(
-      90deg,
-      rgba(104,71,245,0.14),
-      rgba(255,42,179,0.05),
-      transparent
-    );
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .oc-emoji-title {
-  font-weight: 900;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.92);
-}
-
-.oc-emoji-title::before {
-  content: "C:";
-  margin-right: 6px;
-  color: var(--cobra-magenta);
+  font-weight: 800;
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
 }
 
 .oc-emoji-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 7px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.035);
-  color: rgba(255,255,255,0.82);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.85);
   cursor: pointer;
   padding: 0;
   line-height: 1;
-  display: grid;
-  place-items: center;
 }
 
 .oc-emoji-panel-body {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 9px;
+  padding: 10px;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color:
-    rgba(104, 71, 245, 0.48)
-    transparent;
   -webkit-overflow-scrolling: touch;
-}
-
-.oc-emoji-panel-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.oc-emoji-panel-body::-webkit-scrollbar-thumb {
-  background: rgba(104, 71, 245, 0.45);
-  border-radius: 8px;
 }
 
 .oc-emoji-grid {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 7px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -417,20 +207,11 @@ img.emoji.oc-emote-single-img {
   min-width: 0;
   aspect-ratio: 1 / 1;
   padding: 0;
-  border-radius: 7px;
-  border: 1px solid rgba(255,255,255,0.075);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.035),
-      rgba(255,255,255,0.015)
-    );
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
   cursor: pointer;
   touch-action: manipulation;
-  transition:
-    transform 120ms ease,
-    border-color 120ms ease,
-    background 120ms ease;
 }
 
 .oc-emoji-tile img {
@@ -445,389 +226,28 @@ img.emoji.oc-emote-single-img {
 
 .oc-emoji-empty {
   padding: 14px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--oc-panel-text-2);
-}
-
-/* =========================================================
-   Join/leave & system-like rows
-   ========================================================= */
-
-[class*="ChatUserMessage_system"],
-[class*="ChatUserMessage_event"],
-[class*="ChatUserMessage_notice"] {
-  opacity: 0.68;
-  font-size: 0.93em;
-}
-
-/* =========================================================
-   Subtle CRT texture — panels only
-   ========================================================= */
-
-.oc-emoji-panel {
-  position: fixed;
-}
-
-.oc-emoji-panel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.055;
-  background:
-    repeating-linear-gradient(
-      180deg,
-      rgba(255,255,255,0.08) 0,
-      rgba(255,255,255,0.08) 1px,
-      transparent 1px,
-      transparent 4px
-    );
-}
-
-.oc-emoji-panel > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* =========================================================
-   Desktop hover
-   ========================================================= */
-
-@media (hover: hover) and (pointer: fine) {
-  span[class*="ChatUserMessage_userName"]:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-
-  .oc-emoji-btn:hover {
-    border-color: rgba(123, 92, 255, 0.72);
-    box-shadow:
-      0 0 0 1px rgba(104, 71, 245, 0.12),
-      0 0 14px rgba(104, 71, 245, 0.18);
-  }
-
-  .oc-emoji-close:hover {
-    border-color: rgba(255,255,255,0.22);
-    background: rgba(255,255,255,0.06);
-  }
-
-  .oc-emoji-tile:hover {
-    border-color: rgba(104, 71, 245, 0.38);
-    background: rgba(104, 71, 245, 0.07);
-    transform: translateY(-1px);
-  }
-}
-
-/* =========================================================
-   Mobile
-   ========================================================= */
-
-@media (max-width: 720px) {
-  [class*="ChatContainer_virtuoso"] > div > div {
-    padding-inline: 0.62em !important;
-  }
-
-  [class*="ChatUserMessage_root"],
-  [class*="ChatUserMessage_ownMessage"] {
-    margin-bottom: 6px !important;
-  }
-
-  [class*="ChatUserMessage_message"] {
-    line-height: 1.2;
-  }
-
-  .oc-message-accent {
-    padding-left: 8px !important;
-  }
-
-  .oc-message-accent::before {
-    width: 2px;
-    top: 2px;
-    bottom: 2px;
-  }
-
-  .oc-emoji-panel {
-    width: calc(100vw - 14px);
-    max-height:
-      calc(
-        100dvh
-        - 14px
-        - env(safe-area-inset-top, 0px)
-        - env(safe-area-inset-bottom, 0px)
-      );
-    border-radius: 9px;
-  }
-
-  .oc-emoji-panel-header {
-    min-height: 42px;
-    padding: 6px 8px;
-  }
-
-  .oc-emoji-panel-body {
-    padding: 8px;
-  }
-
-  .oc-emoji-grid {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 6px;
-  }
-
-  .oc-emoji-tile {
-    border-radius: 6px;
-  }
-
-  [class*="ChatTextField_inputWrap"] {
-    border-radius: 8px !important;
-  }
-
-  .oc-emoji-panel::after {
-    opacity: 0.035;
-  }
-}
-
-@media (max-width: 360px) {
-  .oc-emoji-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-}
-
-/* =========================================================
-   Accessibility
-   ========================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-  .oc-emoji-tile,
-  .oc-emoji-btn,
-  [class*="ChatTextField_inputWrap"] {
-    transition: none !important;
-  }
-
-  .oc-emoji-tile {
-    transform: none !important;
-  }
-}
-
-/* Fallback if color-mix is unsupported */
-@supports not (color: color-mix(in srgb, red 50%, blue)) {
-  .oc-message-accent::before {
-    box-shadow: 0 0 6px rgba(255,255,255,0.08);
-  }
-}
-
-
-/* =========================================================
-   V2.1 — Emoji picker viewport fix
-   ========================================================= */
-
-.oc-emoji-panel {
-  position: fixed !important;
-  z-index: 2147483647 !important;
-  margin: 0 !important;
-  max-width: calc(100vw - 16px);
-  overflow: hidden;
-}
-
-.oc-emoji-panel.is-open {
-  display: flex !important;
 }
 
 @media (max-width: 720px) {
   .oc-emoji-panel {
     width: calc(100vw - 16px);
-    max-width: calc(100vw - 16px);
     height: min(390px, calc(100dvh - 16px));
   }
-
-  .oc-emoji-panel-body {
-    min-height: 0;
-    overflow-y: auto !important;
+  .oc-emoji-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
   }
 }
 
-
-/* =========================================================
-   V2.2 — Desktop chat shell
-   Keeps the existing mobile presentation intact.
-   ========================================================= */
-
-@media (min-width: 721px) {
-  #chat-container {
-    border-left: 1px solid rgba(104, 71, 245, 0.22);
-    background:
-      radial-gradient(
-        circle at 100% 0%,
-        rgba(104, 71, 245, 0.07),
-        transparent 34%
-      ),
-      linear-gradient(
-        180deg,
-        rgba(13, 15, 19, 0.995),
-        rgba(8, 10, 13, 0.995)
-      ) !important;
-    box-shadow:
-      inset 1px 0 0 rgba(255,255,255,0.025),
-      -12px 0 34px rgba(0,0,0,0.18);
-  }
-
-  /* Chat header / account strip */
-  #chat-container [class*="ChatContainer_header"],
-  #chat-container [class*="ChatHeader_"],
-  #chat-container [class*="ChatContainer_top"] {
-    background:
-      linear-gradient(
-        90deg,
-        rgba(104,71,245,0.15),
-        rgba(255,42,179,0.035),
-        transparent
-      ) !important;
-    border-bottom: 1px solid rgba(104,71,245,0.18) !important;
-  }
-
-  /* Main message viewport */
-  #chat-container [class*="ChatContainer_virtuoso"] {
-    background: transparent !important;
-  }
-
-  #chat-container [class*="ChatContainer_virtuoso"] > div > div {
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-  }
-
-  #chat-container [class*="ChatUserMessage_root"],
-  #chat-container [class*="ChatUserMessage_ownMessage"] {
-    margin-bottom: 5px !important;
-  }
-
-  #chat-container [class*="ChatUserMessage_message"] {
-    line-height: 1.14 !important;
-  }
-
-  /* Welcome / announcement cards */
-  #chat-container [class*="ChatMessage_announcement"],
-  #chat-container [class*="ChatUserMessage_announcement"],
-  #chat-container [class*="ChatMessage_systemMessage"],
-  #chat-container [class*="ChatContainer_announcement"] {
-    border: 1px solid rgba(104,71,245,0.20) !important;
-    border-radius: 6px !important;
-    background:
-      linear-gradient(
-        110deg,
-        rgba(104,71,245,0.18),
-        rgba(255,42,179,0.055)
-      ) !important;
-    box-shadow: inset 2px 0 0 rgba(255,42,179,0.42);
-  }
-
-  /* Composer/footer area */
-  #chat-container [class*="ChatContainer_chatTextField"] {
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-    border-top: 1px solid rgba(104,71,245,0.22) !important;
-    background:
-      linear-gradient(
-        180deg,
-        rgba(12,14,18,0.98),
-        rgba(7,9,12,0.995)
-      ) !important;
-    box-shadow: 0 -10px 28px rgba(0,0,0,0.20);
-  }
-
-  #chat-container [class*="ChatTextField_inputWrap"] {
-    min-height: 38px;
-    border: 1px solid rgba(123,92,255,0.82) !important;
-    box-shadow:
-      inset 0 0 0 1px rgba(255,255,255,0.025),
-      0 0 0 1px rgba(104,71,245,0.08),
-      0 0 12px rgba(104,71,245,0.08);
-  }
-
-  #chat-container [class*="ChatTextField_inputWrap"]:focus-within {
-    border-color: rgba(255,42,179,0.72) !important;
-    box-shadow:
-      0 0 0 1px rgba(255,42,179,0.10),
-      0 0 15px rgba(104,71,245,0.16);
-  }
-
-  /* More compact, technical-looking emoji trigger */
-  #chat-container .oc-emoji-btn {
-    border-radius: 6px;
-    border-color: rgba(255,42,179,0.26);
-    background:
-      linear-gradient(
-        180deg,
-        rgba(28,30,37,0.98),
-        rgba(13,15,20,0.99)
-      );
-  }
-
-  /* Picker belongs visually to the chat column */
-  .oc-emoji-panel {
-    border-radius: 8px;
-    border-color: rgba(104,71,245,0.50);
-    background:
-      linear-gradient(
-        180deg,
-        rgba(16,18,23,0.995),
-        rgba(8,10,14,0.995)
-      );
-  }
-
-  .oc-emoji-panel-header {
-    background:
-      linear-gradient(
-        90deg,
-        rgba(104,71,245,0.20),
-        rgba(255,42,179,0.07),
-        transparent
-      );
-  }
-
+@media (max-width: 360px) {
+  .oc-emoji-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 
-
-/* =========================================================
-   V2.3 — Desktop scroll / Virtuoso stability fix
-   ========================================================= */
-
-@media (min-width: 721px) {
-  /* Leave Virtuoso positioning untouched. */
-  #chat-container {
-    overflow: hidden;
-  }
-
-  #chat-container [class*="ChatContainer_virtuoso"],
-  #chat-container [data-virtuoso-scroller="true"] {
-    min-height: 0 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    overscroll-behavior-y: contain;
-
-    scrollbar-width: thin;
-    scrollbar-color:
-      rgba(123, 92, 255, 0.58)
-      rgba(255, 255, 255, 0.035);
-  }
-
-  #chat-container [class*="ChatContainer_virtuoso"]::-webkit-scrollbar,
-  #chat-container [data-virtuoso-scroller="true"]::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  #chat-container [class*="ChatContainer_virtuoso"]::-webkit-scrollbar-track,
-  #chat-container [data-virtuoso-scroller="true"]::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.025);
-  }
-
-  #chat-container [class*="ChatContainer_virtuoso"]::-webkit-scrollbar-thumb,
-  #chat-container [data-virtuoso-scroller="true"]::-webkit-scrollbar-thumb {
-    background: rgba(123, 92, 255, 0.52);
-    border-radius: 8px;
-    border: 2px solid rgba(10, 12, 15, 0.95);
-  }
-
-  #chat-container [class*="ChatContainer_virtuoso"]::-webkit-scrollbar-thumb:hover,
-  #chat-container [data-virtuoso-scroller="true"]::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 42, 179, 0.58);
-  }
+@media (hover: hover) and (pointer: fine) {
+  span[class*="ChatUserMessage_userName"]:hover { text-decoration: underline; }
+  .oc-emoji-btn:hover { border-color: rgba(255,255,255,0.28); }
+  .oc-emoji-close:hover { border-color: rgba(255,255,255,0.24); }
+  .oc-emoji-tile:hover { border-color: rgba(255,255,255,0.18); }
 }
