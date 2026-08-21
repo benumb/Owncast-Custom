@@ -1,7 +1,6 @@
-
 /*
 Copyright 2026 Cobra Videoclub
-Owncast Custom CSS - V2.0
+Owncast Custom CSS - V2.1
 */
 
 /* =========================================================
@@ -465,9 +464,8 @@ img.emoji.oc-emote-single-img {
    Subtle CRT texture — panels only
    ========================================================= */
 
-#chat-container,
 .oc-emoji-panel {
-  position: relative;
+  position: fixed;
 }
 
 #chat-container::after,
@@ -617,5 +615,35 @@ img.emoji.oc-emote-single-img {
 @supports not (color: color-mix(in srgb, red 50%, blue)) {
   .oc-message-accent::before {
     box-shadow: 0 0 6px rgba(255,255,255,0.08);
+  }
+}
+
+
+/* =========================================================
+   V2.1 — Emoji picker viewport fix
+   ========================================================= */
+
+.oc-emoji-panel {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  margin: 0 !important;
+  max-width: calc(100vw - 16px);
+  overflow: hidden;
+}
+
+.oc-emoji-panel.is-open {
+  display: flex !important;
+}
+
+@media (max-width: 720px) {
+  .oc-emoji-panel {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    height: min(390px, calc(100dvh - 16px));
+  }
+
+  .oc-emoji-panel-body {
+    min-height: 0;
+    overflow-y: auto !important;
   }
 }
