@@ -1,11 +1,11 @@
 /*
-Owncast Custom JS - V1.6
-Copyright 2026 Cobravideoclub
+Owncast Custom JS - V1.7
+Copyright 2026 Cobra Videoclub
 
-V1.6:
-- Fix Owncast custom JS initialization when the script is injected after window.load
-- Works whether the page is still loading or already loaded
-- Keep previous message accent and mobile/emote compatibility changes
+V1.7:
+- Fix custom smile button disappearing on desktop and mobile
+- Exclude the custom button itself from native Owncast emoji-button detection
+- Keep delayed Owncast injection compatibility from V1.6
 - Reduce full-page DOM scans
 - Safer responsive picker positioning
 - Cache emoji API after first successful load
@@ -638,7 +638,7 @@ function initOwncastCustom() {
 
     const buttons = Array.from(
       scope.querySelectorAll("button")
-    );
+    ).filter((button) => button !== btn && !button.classList.contains("oc-emoji-btn"));
 
     const labeled = buttons.find((button) => {
       const label = String(
@@ -658,7 +658,7 @@ function initOwncastCustom() {
     if (chatField) {
       const nearbyButtons = Array.from(
         chatField.querySelectorAll("button")
-      );
+      ).filter((button) => button !== btn && !button.classList.contains("oc-emoji-btn"));
 
       if (nearbyButtons.length) {
         return nearbyButtons[nearbyButtons.length - 1];
