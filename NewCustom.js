@@ -1,11 +1,11 @@
 /*
-Owncast Custom JS - V2.0
+Owncast Custom JS - V2.1
 Copyright 2026 Cobra Videoclub
 
-V2.0:
-- Cobra Videoclub visual refresh support
-- Keep all V1.8 mobile/desktop fixes
-- Preserve emotes, mentions, user-color accents and responsive chat behavior
+V2.1:
+- Fix emoji picker positioning relative to the chat input
+- Keep picker visible inside the viewport on desktop and mobile
+- Preserve all V2.0 design and V1.8 compatibility fixes
 - Reduce full-page DOM scans
 - Safer responsive picker positioning
 - Cache emoji API after first successful load
@@ -790,63 +790,80 @@ function initOwncastCustom() {
     if (!isOpen) return;
 
     const buttonRect = btn.getBoundingClientRect();
+    const vv = window.visualViewport;
 
+    const viewportLeft = vv?.offsetLeft || 0;
+    const viewportTop = vv?.offsetTop || 0;
     const viewportWidth =
+      vv?.width ||
       document.documentElement.clientWidth ||
       window.innerWidth;
-
     const viewportHeight =
-      window.visualViewport?.height ||
+      vv?.height ||
       document.documentElement.clientHeight ||
       window.innerHeight;
 
+    const margin = 8;
+    const gap = 10;
+
+    // Reset any stale positioning before measuring.
+    panel.style.left = `${margin}px`;
+    panel.style.top = `${margin}px`;
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+
     const panelRect = panel.getBoundingClientRect();
-
-    const panelWidth =
-      panelRect.width ||
-      Math.min(360, viewportWidth - PANEL_MARGIN * 2);
-
-    const panelHeight =
-      panelRect.height ||
-      Math.min(420, viewportHeight - PANEL_MARGIN * 2);
-
-    let left = buttonRect.right - panelWidth;
-    left = clamp(
-      left,
-      PANEL_MARGIN,
-      viewportWidth - panelWidth - PANEL_MARGIN
+    const panelWidth = Math.min(
+      panelRect.width || 360,
+      viewportWidth - margin * 2
+    );
+    const panelHeight = Math.min(
+      panelRect.height || 420,
+      viewportHeight - margin * 2
     );
 
-    const roomAbove =
-      buttonRect.top - PANEL_GAP - PANEL_MARGIN;
+    let left = buttonRect.right - panelWidth;
 
-    const roomBelow =
-      viewportHeight -
-      buttonRect.bottom -
-      PANEL_GAP -
-      PANEL_MARGIN;
+    left = clamp(
+      left,
+      viewportLeft + margin,
+      viewportLeft + viewportWidth - panelWidth - margin
+    );
+
+    const aboveTop = buttonRect.top - panelHeight - gap;
+    const belowTop = buttonRect.bottom + gap;
+
+    const fitsAbove =
+      aboveTop >= viewportTop + margin;
+
+    const fitsBelow =
+      belowTop + panelHeight <=
+      viewportTop + viewportHeight - margin;
 
     let top;
 
-    if (
-      roomAbove >= panelHeight ||
-      roomAbove >= roomBelow
-    ) {
-      top = buttonRect.top - panelHeight - PANEL_GAP;
+    if (fitsAbove) {
+      top = aboveTop;
+    } else if (fitsBelow) {
+      top = belowTop;
     } else {
-      top = buttonRect.bottom + PANEL_GAP;
+      // Mobile/small viewport: keep the picker fully inside the screen.
+      top = clamp(
+        buttonRect.top - panelHeight - gap,
+        viewportTop + margin,
+        viewportTop + viewportHeight - panelHeight - margin
+      );
     }
 
-    top = clamp(
-      top,
-      PANEL_MARGIN,
-      viewportHeight - panelHeight - PANEL_MARGIN
-    );
-
-    panel.style.left = `${left}px`;
-    panel.style.top = `${top}px`;
-    panel.style.right = "";
-    panel.style.bottom = "";
+    panel.style.width = `${panelWidth}px`;
+    panel.style.maxHeight = `${Math.max(
+      180,
+      viewportHeight - margin * 2
+    )}px`;
+    panel.style.left = `${Math.round(left)}px`;
+    panel.style.top = `${Math.round(top)}px`;
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
   }
 
   const reposition = throttleRaf(() => {
