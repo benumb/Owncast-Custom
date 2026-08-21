@@ -1,10 +1,10 @@
 /*
-Owncast Custom JS - V1.4
+Owncast Custom JS - V1.5
 Copyright 2023 Le fractal + Cobravideoclub
 
-V1.4:
-- Android fix: mark the emoji image itself when it is the only content of a message
-- No longer relies only on the ChatUserMessage_message wrapper for enlargement
+V1.5:
+- Add a thin left accent line to each chat message using the author's username color
+- Keep previous mobile/emote compatibility changes
 - Reduce full-page DOM scans
 - Safer responsive picker positioning
 - Cache emoji API after first successful load
@@ -21,6 +21,8 @@ window.addEventListener("load", () => {
 
   const SELECTOR_MESSAGE = '[class*="ChatUserMessage_message"]';
   const SELECTOR_USERNAME = '[class*="ChatUserMessage_userName"]';
+  const SELECTOR_MESSAGE_ROOT =
+    '[class*="ChatUserMessage_root"], [class*="ChatUserMessage_ownMessage"]';
   const SELECTOR_CHAT_ROOT =
     '[class*="ChatContainer_virtuoso"], #chat-container';
   const SELECTOR_CHAT_FIELD =
@@ -223,6 +225,24 @@ window.addEventListener("load", () => {
     });
   }
 
+  function applyMessageAccentColors(root = document) {
+    const usernames = queryIncludingRoot(root, SELECTOR_USERNAME);
+
+    usernames.forEach((usernameEl) => {
+      const color = getComputedStyle(usernameEl).color;
+      if (!color) return;
+
+      const messageRoot =
+        usernameEl.closest(SELECTOR_MESSAGE_ROOT) ||
+        usernameEl.closest('[class*="ChatUserMessage_"]');
+
+      if (!messageRoot) return;
+
+      messageRoot.classList.add("oc-message-accent");
+      messageRoot.style.setProperty("--oc-message-accent-color", color);
+    });
+  }
+
   function markEmoteOnlyMessages(root = document) {
     const scope = root?.querySelectorAll ? root : document;
 
@@ -384,6 +404,7 @@ window.addEventListener("load", () => {
 
   function processChat(root = getChatRoot()) {
     collectUserColorsAndMarkAdmin(root);
+    applyMessageAccentColors(root);
     markEmoteOnlyMessages(root);
     colorizeMentionsInAllMessages(root);
   }
@@ -843,6 +864,7 @@ window.addEventListener("load", () => {
 
         roots.forEach((root) => {
           collectUserColorsAndMarkAdmin(root);
+          applyMessageAccentColors(root);
 
           if (root.matches?.(SELECTOR_MESSAGE)) {
             messageRoots.add(root);
