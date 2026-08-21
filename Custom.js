@@ -1,10 +1,10 @@
 /*
-Owncast Custom JS - V1.3
-Copyright 2026 Cobravideoclub
+Owncast Custom JS - V1.4
+Copyright 2023 Le fractal + Cobravideoclub
 
-V1.3:
-- Fix single-emote enlargement when Android/Owncast inserts the emoji image after the message node
-- Reprocess the closest chat-message ancestor for DOM mutations
+V1.4:
+- Android fix: mark the emoji image itself when it is the only content of a message
+- No longer relies only on the ChatUserMessage_message wrapper for enlargement
 - Reduce full-page DOM scans
 - Safer responsive picker positioning
 - Cache emoji API after first successful load
@@ -224,19 +224,56 @@ window.addEventListener("load", () => {
   }
 
   function markEmoteOnlyMessages(root = document) {
-    const messages = queryIncludingRoot(root, SELECTOR_MESSAGE);
+    const scope = root?.querySelectorAll ? root : document;
 
-    messages.forEach((msgEl) => {
-      msgEl.classList.remove("oc-emote-single");
+    // Clear previous direct-image markers in this scope.
+    if (root instanceof HTMLImageElement && root.matches("img.emoji")) {
+      root.classList.remove("oc-emote-single-img");
+    }
 
-      const emojis = msgEl.querySelectorAll("img.emoji");
+    scope
+      .querySelectorAll?.("img.emoji.oc-emote-single-img")
+      .forEach((img) => img.classList.remove("oc-emote-single-img"));
+
+    const images = [];
+
+    if (root instanceof HTMLImageElement && root.matches("img.emoji")) {
+      images.push(root);
+    }
+
+    scope.querySelectorAll?.("img.emoji").forEach((img) => images.push(img));
+
+    images.forEach((img) => {
+      // Prefer Owncast's message content wrapper, but provide fallbacks
+      // for alternate/mobile DOM layouts.
+      const message =
+        img.closest(SELECTOR_MESSAGE) ||
+        img.closest('[class*="ChatUserMessage_messagePadding"]') ||
+        img.parentElement;
+
+      if (!message) return;
+
+      const emojis = message.querySelectorAll("img.emoji");
       if (emojis.length !== 1) return;
 
-      const clone = msgEl.cloneNode(true);
+      // Clone the message content and remove the emoji.
+      // If nothing visible remains, this is an emote-only message.
+      const clone = message.cloneNode(true);
       clone.querySelectorAll("img.emoji").forEach((emoji) => emoji.remove());
 
-      const text = normalizeSpaces(clone.textContent).replace(/\s+/g, "");
-      if (!text) msgEl.classList.add("oc-emote-single");
+      const remainingText = (clone.textContent || "")
+        .replace(/\u200B/g, "")
+        .replace(/\u00A0/g, " ")
+        .replace(/\s+/g, "")
+        .trim();
+
+      if (!remainingText) {
+        img.classList.add("oc-emote-single-img");
+        message.classList.add("oc-emote-single");
+      } else {
+        img.classList.remove("oc-emote-single-img");
+        message.classList.remove("oc-emote-single");
+      }
     });
   }
 
@@ -833,6 +870,11 @@ window.addEventListener("load", () => {
           });
         }
       }
+
+      // Owncast/React can update the emoji image independently of the
+      // surrounding message, especially on mobile. Re-scan emoji-only
+      // messages after every throttled chat mutation.
+      markEmoteOnlyMessages(getChatRoot());
 
       attachFieldObserver();
       reposition();
