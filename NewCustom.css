@@ -1,6 +1,6 @@
 /*
 Copyright 2026 Cobra Videoclub
-Owncast Custom CSS - V2.1
+Owncast Custom CSS - V2.2
 */
 
 /* =========================================================
@@ -645,5 +645,149 @@ img.emoji.oc-emote-single-img {
   .oc-emoji-panel-body {
     min-height: 0;
     overflow-y: auto !important;
+  }
+}
+
+
+/* =========================================================
+   V2.2 — Desktop chat shell
+   Keeps the existing mobile presentation intact.
+   ========================================================= */
+
+@media (min-width: 721px) {
+  #chat-container {
+    border-left: 1px solid rgba(104, 71, 245, 0.22);
+    background:
+      radial-gradient(
+        circle at 100% 0%,
+        rgba(104, 71, 245, 0.07),
+        transparent 34%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(13, 15, 19, 0.995),
+        rgba(8, 10, 13, 0.995)
+      ) !important;
+    box-shadow:
+      inset 1px 0 0 rgba(255,255,255,0.025),
+      -12px 0 34px rgba(0,0,0,0.18);
+  }
+
+  /* Chat header / account strip */
+  #chat-container [class*="ChatContainer_header"],
+  #chat-container [class*="ChatHeader_"],
+  #chat-container [class*="ChatContainer_top"] {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(104,71,245,0.15),
+        rgba(255,42,179,0.035),
+        transparent
+      ) !important;
+    border-bottom: 1px solid rgba(104,71,245,0.18) !important;
+  }
+
+  /* Main message viewport */
+  #chat-container [class*="ChatContainer_virtuoso"] {
+    background: transparent !important;
+  }
+
+  #chat-container [class*="ChatContainer_virtuoso"] > div > div {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  #chat-container [class*="ChatUserMessage_root"],
+  #chat-container [class*="ChatUserMessage_ownMessage"] {
+    margin-bottom: 5px !important;
+  }
+
+  #chat-container [class*="ChatUserMessage_message"] {
+    line-height: 1.14 !important;
+  }
+
+  /* Welcome / announcement cards */
+  #chat-container [class*="ChatMessage_announcement"],
+  #chat-container [class*="ChatUserMessage_announcement"],
+  #chat-container [class*="ChatMessage_systemMessage"],
+  #chat-container [class*="ChatContainer_announcement"] {
+    border: 1px solid rgba(104,71,245,0.20) !important;
+    border-radius: 6px !important;
+    background:
+      linear-gradient(
+        110deg,
+        rgba(104,71,245,0.18),
+        rgba(255,42,179,0.055)
+      ) !important;
+    box-shadow: inset 2px 0 0 rgba(255,42,179,0.42);
+  }
+
+  /* Composer/footer area */
+  #chat-container [class*="ChatContainer_chatTextField"] {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    border-top: 1px solid rgba(104,71,245,0.22) !important;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(12,14,18,0.98),
+        rgba(7,9,12,0.995)
+      ) !important;
+    box-shadow: 0 -10px 28px rgba(0,0,0,0.20);
+  }
+
+  #chat-container [class*="ChatTextField_inputWrap"] {
+    min-height: 38px;
+    border: 1px solid rgba(123,92,255,0.82) !important;
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.025),
+      0 0 0 1px rgba(104,71,245,0.08),
+      0 0 12px rgba(104,71,245,0.08);
+  }
+
+  #chat-container [class*="ChatTextField_inputWrap"]:focus-within {
+    border-color: rgba(255,42,179,0.72) !important;
+    box-shadow:
+      0 0 0 1px rgba(255,42,179,0.10),
+      0 0 15px rgba(104,71,245,0.16);
+  }
+
+  /* More compact, technical-looking emoji trigger */
+  #chat-container .oc-emoji-btn {
+    border-radius: 6px;
+    border-color: rgba(255,42,179,0.26);
+    background:
+      linear-gradient(
+        180deg,
+        rgba(28,30,37,0.98),
+        rgba(13,15,20,0.99)
+      );
+  }
+
+  /* Picker belongs visually to the chat column */
+  .oc-emoji-panel {
+    border-radius: 8px;
+    border-color: rgba(104,71,245,0.50);
+    background:
+      linear-gradient(
+        180deg,
+        rgba(16,18,23,0.995),
+        rgba(8,10,14,0.995)
+      );
+  }
+
+  .oc-emoji-panel-header {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(104,71,245,0.20),
+        rgba(255,42,179,0.07),
+        transparent
+      );
+  }
+
+  /* The scanline should remain almost invisible on desktop text. */
+  #chat-container::after {
+    opacity: 0.025;
   }
 }
