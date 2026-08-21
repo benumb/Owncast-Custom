@@ -1,0 +1,354 @@
+/*
+Copyright 2023 Le fractal + Cobravideoclub
+*/
+
+/* =========================================================
+   Variables
+   ========================================================= */
+:root {
+  --header-height: 50px;
+
+  --darker-grey: #0b0c0d;
+  --lighter-grey: #131516;
+  --lighter-grey-2: #29292e;
+  --whitish: rgb(239, 239, 241);
+
+  --mention-fallback: #a970ff;
+
+  --admin-accent: #ffd54a;
+  --admin-bg: rgba(255, 213, 74, 0.14);
+  --admin-text: var(--whitish);
+
+  /* Emote picker */
+  --oc-panel-bg: rgba(19, 21, 22, 0.96);
+  --oc-panel-border: rgba(255,255,255,0.12);
+  --oc-panel-shadow: 0 18px 60px rgba(0,0,0,0.55);
+  --oc-panel-text: rgba(255,255,255,0.92);
+  --oc-panel-text-2: rgba(255,255,255,0.70);
+}
+
+/* =========================================================
+   Layout / header / sidebar
+   ========================================================= */
+[class^="Sidebar_root"],
+[class*=" Sidebar_root"] {
+  top: calc(var(--header-height) - 1px);
+}
+
+[class^="Header_header"],
+[class*=" Header_header"],
+header {
+  background-color: var(--darker-grey);
+}
+
+body {
+  background-color: var(--darker-grey);
+}
+
+/* =========================================================
+   Chat — spacing / inline usernames / badges / borders
+   ========================================================= */
+
+[class^="ChatContainer_virtuoso"] > div > div,
+[class*=" ChatContainer_virtuoso"] > div > div {
+  padding-left: 0.6em !important;
+  padding-right: 0.6em !important;
+}
+
+[class^="ChatUserMessage_repeat"],
+[class*=" ChatUserMessage_repeat"],
+[class^="ChatUserMessage_user"],
+[class*=" ChatUserMessage_user"] {
+  display: inline !important;
+}
+
+[class^="ChatUserMessage_user_"]::after,
+[class*=" ChatUserMessage_user_"]::after,
+[class^="ChatUserMessage_repeat"]::after,
+[class*=" ChatUserMessage_repeat"]::after {
+  content: ": ";
+  font-weight: 400;
+}
+
+[class^="ChatUserMessage_userBadges"],
+[class*=" ChatUserMessage_userBadges"] {
+  margin: 0 !important;
+}
+
+[class^="ChatUserBadge_badge_"],
+[class*=" ChatUserBadge_badge_"] {
+  width: 10px !important;
+  height: 10px !important;
+  margin-left: 2px !important;
+}
+
+[class^="ChatUserMessage_message"] p,
+[class*=" ChatUserMessage_message"] p {
+  display: inline;
+}
+
+[class^="ChatUserMessage_messagePadding"],
+[class*=" ChatUserMessage_messagePadding"] {
+  padding: 0;
+}
+
+[class^="ChatUserMessage_root"],
+[class*=" ChatUserMessage_root"],
+[class^="ChatUserMessage_ownMessage"],
+[class*=" ChatUserMessage_ownMessage"] {
+  border: none !important;
+  margin-bottom: 2px !important;
+}
+
+[class^="ChatUserMessage_message"],
+[class*=" ChatUserMessage_message"] {
+  line-height: 1.1;
+}
+
+[class^="ChatUserMessage_background"],
+[class*=" ChatUserMessage_background"] {
+  background-color: transparent !important;
+}
+
+#chat-container {
+  background-color: var(--lighter-grey);
+}
+
+[class^="ChatContainer_chatTextField"],
+[class*=" ChatContainer_chatTextField"] {
+  border-top: none;
+}
+
+[class^="ChatTextField_root"],
+[class*=" ChatTextField_root"] {
+  background-color: transparent;
+  color: var(--whitish);
+}
+
+[class^="ChatTextField_root"] :empty::before,
+[class*=" ChatTextField_root"] :empty::before {
+  color: var(--theme-color-action);
+  font-weight: 700;
+}
+
+[class^="ChatTextField_inputWrap"],
+[class*=" ChatTextField_inputWrap"] {
+  background-color: transparent !important;
+  border: 1px solid var(--theme-color-action);
+  color: var(--whitish) !important;
+}
+
+span[class^="ChatUserMessage_userName"],
+span[class*=" ChatUserMessage_userName"] {
+  cursor: pointer;
+}
+
+span[class^="ChatUserMessage_userName"]:hover,
+span[class*=" ChatUserMessage_userName"]:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================
+   Emotes (dans le chat)
+   ========================================================= */
+img.emoji {
+  height: 28px !important;
+  width: auto !important;
+  vertical-align: middle !important;
+}
+
+.oc-emote-single img.emoji {
+  height: 80px !important;
+}
+
+/* =========================================================
+   Mentions (dans le chat) — couleur posée inline par JS
+   ========================================================= */
+.oc-mention {
+  font-weight: 800;
+  font-size: 1em;
+  background: rgba(169, 112, 255, 0.12);
+  padding: 2px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   Admin style
+   ========================================================= */
+.oc-admin-name {
+  font-weight: 800 !important;
+  text-shadow: 0 0 10px rgba(255, 213, 74, 0.35);
+  position: relative;
+}
+
+/* =========================================================
+   Custom emoji picker — button
+   ========================================================= */
+
+.oc-emoji-btn {
+  z-index: 2147483647;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(19, 21, 22, 0.96);
+  color: var(--whitish);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  user-select: none;
+  padding: 0;
+  line-height: 1;
+  font-size: 16px;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+/* Fallback mode (if native button not found) */
+.oc-emoji-btn--fixed {
+  position: fixed;
+  width: 34px;
+  height: 34px;
+  right: 16px;
+  bottom: 72px;
+}
+
+.oc-emoji-btn:hover {
+  border-color: rgba(255,255,255,0.28);
+}
+
+/* =========================================================
+   Panel
+   ========================================================= */
+
+.oc-emoji-panel {
+  position: fixed;
+  z-index: 2147483647;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  height: 420px;
+  max-height: calc(100vh - 24px);
+  border-radius: 14px;
+  background: var(--oc-panel-bg);
+  border: 1px solid var(--oc-panel-border);
+  box-shadow: var(--oc-panel-shadow);
+  overflow: hidden;
+  display: none;
+  color: var(--oc-panel-text);
+  pointer-events: auto;
+}
+
+.oc-emoji-panel.is-open {
+  display: flex;
+  flex-direction: column;
+}
+
+.oc-emoji-panel-header {
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.oc-emoji-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+}
+
+.oc-emoji-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.oc-emoji-close:hover {
+  border-color: rgba(255,255,255,0.24);
+  background: rgba(255,255,255,0.06);
+}
+
+.oc-emoji-panel-body {
+  padding: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.oc-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 420px) {
+  .oc-emoji-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+
+.oc-emoji-tile {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.oc-emoji-tile:hover {
+  border-color: rgba(255,255,255,0.18);
+  transform: translateY(-1px);
+}
+
+.oc-emoji-tile img {
+  width: 38px;
+  height: 38px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.oc-emoji-empty {
+  padding: 14px;
+  font-size: 14px;
+  color: var(--oc-panel-text-2);
+}
+
+/* scroll vertical du picker d'emotes */
+
+.oc-emoji-panel-body {
+
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 360px;
+
+}
+
+/* scrollbar plus propre */
+
+.oc-emoji-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.oc-emoji-panel-body::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 10px;
+}
+
