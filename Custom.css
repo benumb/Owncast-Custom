@@ -1,11 +1,11 @@
 /*
-Owncast Custom JS - V1.7
+Owncast Custom JS - V1.8
 Copyright 2026 Cobra Videoclub
 
-V1.7:
-- Fix custom smile button disappearing on desktop and mobile
-- Exclude the custom button itself from native Owncast emoji-button detection
-- Keep delayed Owncast injection compatibility from V1.6
+V1.8:
+- Hide the custom smile button when the Owncast chat UI is not visible on mobile
+- Show it automatically when the chat panel is opened
+- Keep V1.7 native-button detection fix and V1.6 mobile initialization fix
 - Reduce full-page DOM scans
 - Safer responsive picker positioning
 - Cache emoji API after first successful load
@@ -65,6 +65,40 @@ function initOwncastCustom() {
 
   function getChatFieldRoot() {
     return document.querySelector(SELECTOR_CHAT_FIELD);
+  }
+
+  function isElementVisible(el) {
+    if (!el || !el.isConnected) return false;
+
+    const style = getComputedStyle(el);
+    if (
+      style.display === "none" ||
+      style.visibility === "hidden" ||
+      Number(style.opacity) === 0
+    ) {
+      return false;
+    }
+
+    const rect = el.getBoundingClientRect();
+
+    if (rect.width <= 0 || rect.height <= 0) {
+      return false;
+    }
+
+    const viewportWidth =
+      document.documentElement.clientWidth || window.innerWidth;
+
+    const viewportHeight =
+      window.visualViewport?.height ||
+      document.documentElement.clientHeight ||
+      window.innerHeight;
+
+    return (
+      rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.top < viewportHeight &&
+      rect.left < viewportWidth
+    );
   }
 
   function getChatRoot() {
@@ -669,6 +703,18 @@ function initOwncastCustom() {
   }
 
   const positionOverlay = throttleRaf(() => {
+    const chatField = getChatFieldRoot();
+
+    // On mobile Owncast may keep the chat DOM mounted while the chat panel
+    // itself is closed/off-screen. Do not show our fallback button then.
+    if (!isElementVisible(chatField)) {
+      btn.style.display = "none";
+      if (isOpen) closePanel();
+      return;
+    }
+
+    btn.style.display = "";
+
     const nativeBtn = findNativeEmojiButton();
 
     if (!nativeBtn?.parentElement) {
