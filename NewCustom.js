@@ -1,5 +1,5 @@
 /*
-Owncast Custom JS - V2.5
+Owncast Custom JS - V2.6
 Copyright 2026 Cobra Videoclub
 
 V1.8:
@@ -857,7 +857,10 @@ function initOwncastCustom() {
     }
   });
 
-  window.addEventListener("resize", reposition, {
+  window.addEventListener("resize", () => {
+    reposition();
+    markScrollerThrottled();
+  }, {
     passive: true,
   });
 
@@ -946,6 +949,7 @@ function initOwncastCustom() {
       markEmoteOnlyMessages(getChatRoot());
 
       attachFieldObserver();
+      markScrollerThrottled();
       reposition();
     })
   );
@@ -961,11 +965,55 @@ function initOwncastCustom() {
     });
   }
 
+  function markRealChatScroller() {
+    const chatRoot = document.querySelector("#chat-container") || getChatRoot();
+    if (!chatRoot) return;
+
+    chatRoot
+      .querySelectorAll(".oc-chat-scroller")
+      .forEach((el) => el.classList.remove("oc-chat-scroller"));
+
+    const candidates = Array.from(chatRoot.querySelectorAll("*"));
+
+    let best = null;
+    let bestScore = -1;
+
+    for (const el of candidates) {
+      const style = getComputedStyle(el);
+      const overflowY = style.overflowY;
+
+      if (overflowY !== "auto" && overflowY !== "scroll") continue;
+      if (el.clientHeight <= 0) continue;
+
+      const scrollRange = el.scrollHeight - el.clientHeight;
+      const score = scrollRange + el.clientHeight;
+
+      if (score > bestScore) {
+        best = el;
+        bestScore = score;
+      }
+    }
+
+    const virtuoso =
+      chatRoot.querySelector('[data-virtuoso-scroller="true"]');
+
+    if (virtuoso) {
+      best = virtuoso;
+    }
+
+    if (best) {
+      best.classList.add("oc-chat-scroller");
+    }
+  }
+
+  const markScrollerThrottled = throttleRaf(markRealChatScroller);
+
   function bootstrap() {
     processChat(getChatRoot());
     positionOverlay();
     attachFieldObserver();
     attachChatObserver();
+    markRealChatScroller();
   }
 
   loadEmojis().then(renderGrid);
