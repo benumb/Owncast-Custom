@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ============================================================
-# Cobra HDD Monitor V1.1
+# Cobra HDD Monitor V1.2
 # Monitoring léger des disques connectés à une Freebox
 # ============================================================
 
@@ -17,7 +17,7 @@ from pathlib import Path
 # CONFIGURATION
 # ============================================================
 
-VERSION = "V1.1"
+VERSION = "V1.2"
 
 APP_ID = "fr.cobravideoclub.hddmonitor"
 BASE = "http://mafreebox.freebox.fr/api/v8"
@@ -629,6 +629,31 @@ def fetch_data():
     )
 
 
+    # ========================================================
+    # TRI DES DISQUES
+    #
+    # 1. ALERTE
+    # 2. OK
+    # 3. INACTIF
+    # ========================================================
+
+    priority = {
+        "alert": 0,
+        "ok": 1,
+        "inactive": 2
+    }
+
+    rows.sort(
+        key=lambda disk: (
+            priority.get(
+                disk["health"],
+                1
+            ),
+            disk["label"].lower()
+        )
+    )
+
+
     return {
 
         "version":
@@ -1081,11 +1106,11 @@ h1 {{
 
 .status-badge {{
 
-    min-width: 75px;
+    min-width: 78px;
 
     text-align: center;
 
-    padding: 7px 13px;
+    padding: 8px 14px;
 
     border-radius: 999px;
 
@@ -1313,7 +1338,7 @@ footer {{
 
     .status-badge {{
 
-        min-width: 65px;
+        min-width: 68px;
 
     }}
 
