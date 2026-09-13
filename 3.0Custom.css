@@ -1,0 +1,609 @@
+/*
+Copyright 2026 Cobra Videoclub
+Owncast Custom CSS - V2.8
+Owncast 0.3.0 compatibility
+*/
+
+/* =========================================================
+   COBRA THEME
+   ========================================================= */
+
+:root {
+  --header-height: 50px;
+
+  --darker-grey: #0b0c0d;
+  --lighter-grey: #131516;
+  --whitish: rgb(239, 239, 241);
+
+  --mention-fallback: #a970ff;
+
+  --oc-panel-bg: rgba(19, 21, 22, 0.98);
+  --oc-panel-border: rgba(255, 255, 255, 0.12);
+  --oc-panel-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --oc-panel-text: rgba(255, 255, 255, 0.92);
+  --oc-panel-text-2: rgba(255, 255, 255, 0.70);
+
+  /*
+   * Variables officielles Owncast.
+   * Beaucoup plus stables que les anciennes classes React.
+   */
+  --theme-color-background-main: var(--darker-grey);
+  --theme-color-background-header: var(--darker-grey);
+
+  --theme-color-components-chat-background: var(--lighter-grey);
+  --theme-color-components-chat-text: var(--whitish);
+  --theme-color-components-chat-input-background: rgba(12, 14, 18, 0.96);
+
+  --theme-color-palette-0: var(--whitish);
+  --theme-color-palette-1: rgba(239, 239, 241, 0.72);
+  --theme-color-palette-2: rgba(239, 239, 241, 0.50);
+}
+
+html,
+body {
+  background-color: var(--darker-grey);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADER
+   Sélecteur officiel Owncast
+   ========================================================= */
+
+header {
+  background-color: var(--darker-grey) !important;
+}
+
+
+/* =========================================================
+   CHAT
+   Sélecteurs officiels Owncast 0.3.x
+   ========================================================= */
+
+#chat-container {
+  background-color: var(--lighter-grey) !important;
+  color: var(--whitish);
+}
+
+
+/*
+ * Messages utilisateur
+ */
+
+.chat-message_user {
+  background: transparent !important;
+  border: 0 !important;
+
+  margin-bottom: 4px !important;
+
+  line-height: 1.1;
+}
+
+
+/*
+ * Evite les marges verticales inutiles
+ * dans le contenu des messages.
+ */
+
+.chat-message_user p {
+  display: inline;
+  margin: 0;
+}
+
+
+/*
+ * Messages système / Fediverse
+ * On conserve l'intégration Owncast
+ * mais sans fond agressif.
+ */
+
+.chat-message_system,
+.chat-message_social {
+  border: 0;
+}
+
+
+/* =========================================================
+   USERNAME
+   Compatibilité plus souple avec le frontend Owncast
+   ========================================================= */
+
+/*
+ * On ne dépend plus du préfixe :
+ *
+ * ChatUserMessage_userName
+ *
+ * qui peut changer avec les builds React.
+ */
+
+.chat-message_user [class*="userName"],
+.chat-message_user [class*="username"],
+.chat-message_user [class*="UserName"],
+.chat-message_user [class*="Username"] {
+  cursor: pointer;
+
+  font-weight: 800 !important;
+  letter-spacing: 0.01em;
+}
+
+
+/* =========================================================
+   BADGES
+   ========================================================= */
+
+.chat-message_user [class*="badge"] img,
+.chat-message_user [class*="Badge"] img,
+.chat-message_user [class*="badge"] svg,
+.chat-message_user [class*="Badge"] svg {
+  width: 10px !important;
+  height: 10px !important;
+  margin-left: 2px !important;
+}
+
+
+/* =========================================================
+   CHAMP DE CHAT
+   Pas de dépendance à ChatTextField_*
+   ========================================================= */
+
+#chat-container textarea,
+#chat-container [contenteditable="true"] {
+  color: var(--whitish) !important;
+
+  background-color: rgba(12, 14, 18, 0.96) !important;
+
+  border: 1px solid var(--theme-color-action) !important;
+  border-radius: 8px !important;
+
+  outline: none;
+
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+#chat-container textarea:focus,
+#chat-container [contenteditable="true"]:focus {
+  border-color: var(--theme-color-action) !important;
+
+  box-shadow:
+    0 0 0 1px var(--theme-color-action);
+}
+
+
+/*
+ * Placeholder des contenteditable
+ */
+
+#chat-container [contenteditable="true"]:empty::before {
+  color: var(--theme-color-action);
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   COBRA MESSAGE ACCENT
+   Classe ajoutée par notre JS
+   ========================================================= */
+
+.oc-message-accent {
+  padding-left: 9px !important;
+
+  box-shadow:
+    inset 2px 0 0
+    var(
+      --oc-message-accent-color,
+      var(--theme-color-action)
+    );
+}
+
+
+/* =========================================================
+   ADMIN
+   ========================================================= */
+
+.oc-admin-name {
+  font-weight: 900 !important;
+}
+
+
+/* =========================================================
+   MENTIONS
+   ========================================================= */
+
+.oc-mention {
+  display: inline-block;
+
+  font-weight: 800;
+  font-size: 1em;
+
+  padding: 1px 5px;
+  margin-inline: 1px;
+
+  border-radius: 4px;
+
+  color: inherit;
+
+  background: rgba(104, 71, 245, 0.14);
+  border: 1px solid rgba(104, 71, 245, 0.18);
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   EMOJIS OWNCAST
+   ========================================================= */
+
+img.emoji {
+  height: 28px !important;
+  width: auto !important;
+
+  vertical-align: middle !important;
+}
+
+
+/*
+ * Un emoji seul dans un message.
+ */
+
+.oc-emote-single img.emoji,
+img.emoji.oc-emote-single-img {
+  height: 80px !important;
+  width: auto !important;
+}
+
+
+/* =========================================================
+   COBRA EMOJI BUTTON
+   ========================================================= */
+
+.oc-emoji-btn {
+  z-index: 2147483647;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 8px;
+
+  border:
+    1px solid
+    rgba(123, 92, 255, 0.38);
+
+  background:
+    rgba(18, 20, 24, 0.98);
+
+  color: var(--whitish);
+
+  cursor: pointer;
+
+  user-select: none;
+  -webkit-user-select: none;
+
+  padding: 0;
+
+  line-height: 1;
+  font-size: 16px;
+
+  pointer-events: auto;
+
+  touch-action: manipulation;
+}
+
+
+.oc-emoji-btn--fixed {
+  position: fixed;
+
+  width: 34px;
+  height: 34px;
+
+  right: 16px;
+
+  bottom:
+    calc(
+      72px +
+      env(safe-area-inset-bottom, 0px)
+    );
+}
+
+
+/* =========================================================
+   COBRA EMOJI PANEL
+   ========================================================= */
+
+.oc-emoji-panel {
+  position: fixed !important;
+
+  z-index: 2147483647 !important;
+
+  width:
+    min(
+      360px,
+      calc(100vw - 16px)
+    );
+
+  height:
+    min(
+      420px,
+      calc(100dvh - 16px)
+    );
+
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+
+  margin: 0 !important;
+
+  border-radius: 10px;
+
+  background:
+    rgba(12, 14, 18, 0.99);
+
+  border:
+    1px solid
+    rgba(123, 92, 255, 0.35);
+
+  box-shadow:
+    var(--oc-panel-shadow);
+
+  overflow: hidden;
+
+  display: none;
+
+  color:
+    var(--oc-panel-text);
+
+  pointer-events: auto;
+}
+
+
+.oc-emoji-panel.is-open {
+  display: flex !important;
+  flex-direction: column;
+}
+
+
+/* =========================================================
+   EMOJI PANEL HEADER
+   ========================================================= */
+
+.oc-emoji-panel-header {
+  flex: 0 0 auto;
+
+  display: flex;
+
+  gap: 10px;
+
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 8px 10px;
+
+  border-bottom:
+    1px solid
+    rgba(123, 92, 255, 0.18);
+}
+
+
+.oc-emoji-title {
+  font-weight: 800;
+
+  font-size: 13px;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  color:
+    rgba(255, 255, 255, 0.9);
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+   ========================================================= */
+
+.oc-emoji-close {
+  display: grid;
+  place-items: center;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 8px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.14);
+
+  background:
+    rgba(255, 255, 255, 0.04);
+
+  color:
+    rgba(255, 255, 255, 0.85);
+
+  cursor: pointer;
+
+  padding: 0;
+
+  line-height: 1;
+}
+
+
+/* =========================================================
+   EMOJI PANEL BODY
+   ========================================================= */
+
+.oc-emoji-panel-body {
+  flex: 1 1 auto;
+
+  min-height: 0;
+
+  padding: 10px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* =========================================================
+   EMOJI GRID
+   ========================================================= */
+
+.oc-emoji-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      8,
+      minmax(0, 1fr)
+    );
+
+  gap: 8px;
+
+  width: 100%;
+}
+
+
+.oc-emoji-tile {
+  display: grid;
+  place-items: center;
+
+  width: 100%;
+  min-width: 0;
+
+  aspect-ratio: 1 / 1;
+
+  padding: 0;
+
+  border-radius: 7px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  cursor: pointer;
+
+  touch-action: manipulation;
+}
+
+
+.oc-emoji-tile img {
+  display: block;
+
+  width: 38px;
+  height: 38px;
+
+  max-width: 100%;
+  max-height: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+}
+
+
+.oc-emoji-empty {
+  padding: 14px;
+
+  font-size: 14px;
+
+  color:
+    var(--oc-panel-text-2);
+}
+
+
+/* =========================================================
+   DESKTOP HOVER
+   ========================================================= */
+
+@media (hover: hover) and (pointer: fine) {
+
+  .chat-message_user [class*="userName"]:hover,
+  .chat-message_user [class*="username"]:hover,
+  .chat-message_user [class*="UserName"]:hover,
+  .chat-message_user [class*="Username"]:hover {
+    text-decoration: underline;
+  }
+
+  .oc-emoji-btn:hover {
+    border-color:
+      rgba(123, 92, 255, 0.70);
+  }
+
+  .oc-emoji-close:hover {
+    border-color:
+      rgba(255, 255, 255, 0.24);
+  }
+
+  .oc-emoji-tile:hover {
+    border-color:
+      rgba(123, 92, 255, 0.32);
+
+    background:
+      rgba(123, 92, 255, 0.06);
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 720px) {
+
+  .chat-message_user {
+    margin-bottom: 5px !important;
+    line-height: 1.18;
+  }
+
+  .oc-message-accent {
+    padding-left: 8px !important;
+  }
+
+  .oc-emoji-panel {
+    width:
+      calc(100vw - 16px);
+
+    height:
+      min(
+        390px,
+        calc(100dvh - 16px)
+      );
+  }
+
+  .oc-emoji-grid {
+    grid-template-columns:
+      repeat(
+        7,
+        minmax(0, 1fr)
+      );
+
+    gap: 6px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+  .oc-emoji-grid {
+    grid-template-columns:
+      repeat(
+        6,
+        minmax(0, 1fr)
+      );
+  }
+}
